@@ -27,7 +27,7 @@ bool NumberInput::init(std::string title, int max, InputType type) {
     m_input = TextInput::create(50.f, placeholder);
     m_input->getInputNode()->m_numberInput = true;
     m_input->setFilter("1234567890");
-    if (maxChars != -1) m_input->setMaxCharCount(maxChars + 1);
+    if (maxChars != -1) m_input->setMaxCharCount(maxChars + 1); // DO NOT REMOVE THE + 1 OTHERWISE IT BREAKS ANDROID
 
     auto topSpr = CCSprite::createWithSpriteFrameName("GJ_arrow_01_001.png");
     topSpr->setRotation(90);
