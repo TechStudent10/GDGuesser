@@ -31,10 +31,27 @@ bool LevelLayer::init() {
     background->setColor({ 0, 102, 255 });
     background->setZOrder(-10);
 
+    auto sideArtBottomLeft = CCSprite::createWithSpriteFrameName("GJ_sideArt_001.png");
+    sideArtBottomLeft->setAnchorPoint(ccp(0.f, 0.f));
+    sideArtBottomLeft->setPosition(ccp(director->getScreenLeft() - 1.f, director->getScreenBottom() - 1.f));
+    addChild(sideArtBottomLeft, -2);
+
+    auto sideArtBottomRight = CCSprite::createWithSpriteFrameName("GJ_sideArt_001.png");
+    sideArtBottomRight->setAnchorPoint(ccp(1.f, 0.f));
+    sideArtBottomRight->setPosition(ccp(director->getScreenRight() + 1.f, director->getScreenBottom() - 1.f));
+    sideArtBottomRight->setFlipX(true);
+    addChild(sideArtBottomRight, -2);
+
+    auto sideArtTopRight = CCSprite::createWithSpriteFrameName("GJ_sideArt_001.png");
+    sideArtTopRight->setAnchorPoint(ccp(1.f, 1.f));
+    sideArtTopRight->setPosition(ccp(director->getScreenRight() + 1.f, director->getScreenTop() + 1.f));
+    sideArtTopRight->setFlipX(true);
+    sideArtTopRight->setFlipY(true);
+    addChild(sideArtTopRight, -2);
+
     auto& gm = GuessManager::get();
 
     m_playSprite = CCSprite::createWithSpriteFrameName("GJ_playBtn2_001.png");
-
     m_playBtn = CCMenuItemExt::createSpriteExtra(m_playSprite, [this](CCObject*){
         if (!m_isBusy) {
 
