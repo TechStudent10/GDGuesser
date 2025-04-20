@@ -50,6 +50,10 @@ const std::string GuessManager::getServerUrl() {
 void GuessManager::startNewGame(GameOptions options) {
     
     auto doTheThing = [this, options]() {
+        if (!m_loadingOverlay) {
+            m_loadingOverlay = LoadingOverlayLayer::create();
+            m_loadingOverlay->addToScene();
+        }
         m_listener.bind([this, options] (web::WebTask::Event* e) {
             if (web::WebResponse* res = e->getValue()) {
                 if (res->code() != 200) {
@@ -90,10 +94,6 @@ void GuessManager::startNewGame(GameOptions options) {
     };
     
     auto doAuthentication = [this, doTheThing]() {
-
-        m_loadingOverlay = LoadingOverlayLayer::create();
-        m_loadingOverlay->addToScene();
-        
         // get total score
         // EventListener<web::WebTask> listener;
         m_listener.bind([this] (web::WebTask::Event* e) {
