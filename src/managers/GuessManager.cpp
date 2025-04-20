@@ -86,10 +86,8 @@ void GuessManager::startNewGame(GameOptions options) {
         req.bodyJSON(matjson::makeObject({{"options", options}}));
         m_listener.setFilter(req.post(fmt::format("{}/start-new-game", getServerUrl())));
     };
-
-    if (!m_daToken.empty()) {
-        doTheThing();
-    } else {
+    
+    auto doAuthentication = [this, doTheThing]() {
         // get total score
         // EventListener<web::WebTask> listener;
         m_listener.bind([this] (web::WebTask::Event* e) {
@@ -140,11 +138,32 @@ void GuessManager::startNewGame(GameOptions options) {
             notif->hide();
             doTheThing();
         });
+    };
+
+    if (!m_daToken.empty()) {
+        doTheThing();
+    } else {
+        if (Mod::get()->getSavedValue<bool>("has-consented")) {
+            doAuthentication();
+        } else {
+            createQuickPopup(
+                "Authentication",
+                "For <cg>verification purposes</c> this action will <cl>send a message to a bot account</c> and then immediately delete it.\n<cr>If you do not consent to this, press \"Cancel\"</c>",
+            "Cancel",
+            "Sumbit",
+            [doAuthentication](auto alert, bool btn2) {
+                if (btn2) {
+                    doAuthentication();
+                    Mod::get()->setSavedValue<bool>("has-consented", true);
+                }
+            });
+        }
+
     }
 }
 
-void GuessManager::submitGuess(LevelDate date, std::function<void(int score, std::string correctDate)> callback) {
-    m_listener.bind([this, callback] (web::WebTask::Event* e) {
+void GuessManager::submitGuess(LevelDate date, std::function<void(int score, std::string correctDate, LevelDate date)> callback) {
+    m_listener.bind([this, callback, date] (web::WebTask::Event* e) {
         if (web::WebResponse* res = e->getValue()) {
             if (res->code() != 200) {
                 log::error("error starting submitting guess; http code: {}, error: {}", res->code(), res->string().unwrapOr("unable to get error string"));
@@ -176,7 +195,7 @@ void GuessManager::submitGuess(LevelDate date, std::function<void(int score, std
                 correctDate = correctDateResult.unwrap();
             }
             
-            callback(score, correctDate);
+            callback(score, correctDate, date);
         } else if (e->isCancelled()) {
             log::error("request cancelled");
         }

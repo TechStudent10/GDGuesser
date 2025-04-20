@@ -6,6 +6,14 @@ set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 
 project(GDGuesser VERSION 1.0.0)
 
+option(ENABLE_DEBUG "Enable debug" OFF)
+
+if(ENABLE_DEBUG)
+    add_compile_definitions(DEBUG_ENABLED=1)
+else()
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+endif()
+
 file(GLOB_RECURSE SOURCES
     src/*.cpp
 )

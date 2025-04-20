@@ -79,7 +79,7 @@ public:
 
     void startNewGame(GameOptions options);
     void endGame();
-    void submitGuess(LevelDate date, std::function<void(int score, std::string correctDate)> callback);
+    void submitGuess(LevelDate date, std::function<void(int score, std::string correctDate, LevelDate date)> callback);
 
     void getLeaderboard(std::function<void(std::vector<LeaderboardEntry>)> callback);
     const std::string getServerUrl();

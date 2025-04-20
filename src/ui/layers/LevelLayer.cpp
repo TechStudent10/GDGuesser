@@ -44,13 +44,22 @@ bool LevelLayer::init() {
         gm.options.mode == GameMode::Normal ? gm.realLevel->m_levelName.c_str() : "?????????",
         "bigFont.fnt"
     );
+
+
     auto authorLabel = CCLabelBMFont::create(
-        gm.options.mode == GameMode::Normal ? fmt::format("By {}", gm.realLevel->m_creatorName.c_str()).c_str() : "By ??????",
+        gm.options.mode == GameMode::Normal ? fmt::format("By {}", gm.realLevel->m_creatorName).c_str() : "By ??????",
         "goldFont.fnt"
     );
 
-    nameLabel->setPosition({ size.width / 2, 280.f });
-    authorLabel->setPosition({ size.width / 2, 255.f });
+    nameLabel->setPosition({ size.width * 0.5f, director->getScreenTop() - 17.f });
+    authorLabel->setPosition({ size.width * 0.5f, nameLabel->getPositionY() - 22.f });
+
+    nameLabel->limitLabelWidth(300.f, 0.8f, 0.0f);
+    authorLabel->limitLabelWidth(300.f, 0.8f, 0.0f);
+
+    if (gm.realLevel->m_accountID == 0) {
+        authorLabel->setColor({ 90, 255, 255 });
+    }
 
     this->addChild(nameLabel);
     this->addChild(authorLabel);
@@ -63,18 +72,15 @@ bool LevelLayer::init() {
 
     this->addChild(songWidget);
 
-    auto centerMenu = CCMenu::create();
-    centerMenu->addChild(playBtn);
-    centerMenu->addChild(guessBtn);
-    centerMenu->setLayout(
-        ColumnLayout::create()
-            ->setAxisReverse(true)
-    );
-    centerMenu->setPosition({ size.width / 2, size.height / 2 + 10.f });
-    centerMenu->setAnchorPoint({ 0.5, 0.5 });
+    auto buttonMenu = CCMenu::create();
+    buttonMenu->addChild(playBtn);
+    buttonMenu->addChild(guessBtn);
+
+    playBtn->setPosition(buttonMenu->convertToNodeSpace(ccp(size.width * 0.5f, size.height * 0.5f + 51.f)));
+    guessBtn->setPosition(buttonMenu->convertToNodeSpace(ccp(size.width * 0.5f, size.height * 0.5f - 26.f)));
 
     this->addChild(background);
-    this->addChild(centerMenu);
+    this->addChild(buttonMenu);
 
     auto closeBtnSprite = CCSprite::createWithSpriteFrameName("GJ_arrow_01_001.png");
     auto closeBtn = CCMenuItemExt::createSpriteExtra(
@@ -85,7 +91,7 @@ bool LevelLayer::init() {
 
     auto closeMenu = CCMenu::create();
     closeMenu->addChild(closeBtn);
-    closeMenu->setPosition({ 30, size.height - 30 });
+    closeMenu->setPosition({ 24.f, director->getScreenTop() - 23.f });
     this->addChild(closeMenu);
 
     this->setKeypadEnabled(true);

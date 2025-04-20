@@ -35,9 +35,9 @@ bool GuessPopup::setup() {
             yearInput->getValue(),
             monthInput->getValue(),
             dayInput->getValue()
-        }, [this](int score, std::string correctDate) {
+        }, [this](int score, std::string correctDate, LevelDate date) {
             this->onClose(nullptr);
-            ResultsPopup::create(score, correctDate)->show();
+            ResultsPopup::create(score, correctDate, date)->show();
         });
     });
 
