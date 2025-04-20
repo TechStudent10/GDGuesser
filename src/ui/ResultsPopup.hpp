@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Geode/Geode.hpp>
-#include "../managers/GuessManager.hpp"
+#include <managers/GuessManager.hpp>
 
 using namespace geode::prelude;
 
