@@ -82,14 +82,14 @@ bool GuessPopup::setup() {
     return true;
 }
 
-void GuessPopup::textInputShouldOffset(CCTextInputNode* p0, float p1) {
+void GuessPopup::textInputShouldOffset(CCTextInputNode* p0, float p1) { // This offsets the guess popup when you focus an input on iOS
     auto size = CCDirector::get()->getWinSize();
     m_mainLayer->stopAllActions();
-    m_mainLayer->runAction(CCMoveTo::create(.2f, ccp(size.width, size.height + p1)));
+    m_mainLayer->runAction(CCMoveTo::create(.2f, ccp(size.width * .5f, size.height * .5f + p1)));
 }
 
-void GuessPopup::textInputReturn(CCTextInputNode* p0) {
+void GuessPopup::textInputReturn(CCTextInputNode* p0) { // Moves it back
     auto size = CCDirector::get()->getWinSize();
     m_mainLayer->stopAllActions();
-    m_mainLayer->runAction(CCMoveTo::create(.2f, size));
+    m_mainLayer->runAction(CCMoveTo::create(.2f, size * .5f));
 }
