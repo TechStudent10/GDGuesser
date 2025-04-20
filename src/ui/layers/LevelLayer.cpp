@@ -115,6 +115,8 @@ bool LevelLayer::init() {
     auto songObject = gm.realLevel->m_songID == 0 ? LevelTools::getSongObject(gm.currentLevel->m_audioTrack) : SongInfoObject::create(gm.realLevel->m_songID);
     auto songWidget = CustomSongWidget::create(songObject, nullptr, false, false, true, gm.realLevel->m_songID == 0, false, false, 0);
     
+    songWidget->updateWithMultiAssets(gm.realLevel->m_songIDs, gm.realLevel->m_sfxIDs, 0);
+
     songWidget->updateSongInfo();
     songWidget->setPosition({ size.width / 2, 50.f });
 
