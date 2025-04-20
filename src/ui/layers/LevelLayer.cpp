@@ -134,8 +134,8 @@ bool LevelLayer::init() {
         "star_small01_001.png"
     );
 
-    difficultySprite->setPosition({ size.width * 0.5f - 100.f, gm.realLevel->m_demon > 0 && gm.options.mode == GameMode::Normal ? 231.f : 226.f});
-    starsLabel->setPosition({ difficultySprite->getPositionX(), difficultySprite->getPositionY() - (gm.realLevel->m_demon > 0 && gm.options.mode == GameMode::Normal ? 39.f : 30.f)});
+    starsLabel->setPosition({ size.width * 0.5f - 100.f, director->getScreenTop() * 0.6f});
+    difficultySprite->setPosition({ starsLabel->getPositionX(), starsLabel->getPositionY() + (gm.realLevel->m_demon > 0 && gm.options.mode == GameMode::Normal ? 40.f : 30.f)});
     starsIcon->setPosition({ starsLabel->getPositionX() + 8.f, starsLabel->getPositionY() });
 
     starsLabel->setScale(0.4f);
