@@ -1,8 +1,8 @@
 #include "NumberInput.hpp"
 
-NumberInput* NumberInput::create(std::string title, int max, InputType type) {
+NumberInput* NumberInput::create(std::string title, int max) {
     auto ret = new NumberInput;
-    if (ret->init(title, max, type)) {
+    if (ret->init(title, max)) {
         ret->autorelease();
         return ret;
     }
@@ -10,24 +10,12 @@ NumberInput* NumberInput::create(std::string title, int max, InputType type) {
     return nullptr;
 }
 
-bool NumberInput::init(std::string title, int max, InputType type) {
+bool NumberInput::init(std::string title, int max) {
     m_max = max;
 
-    std::string placeholder = "0";
-    int maxChars = -1;
-
-    switch (type) {
-        case InputType::Year: placeholder = "0000"; maxChars = 4; break;
-        case InputType::Month:
-        case InputType::Day:
-            placeholder = "00"; maxChars = 2; break;
-        default: break;
-    }
-
-    m_input = TextInput::create(50.f, placeholder);
+    m_input = TextInput::create(50.f, "1");
     m_input->getInputNode()->m_numberInput = true;
     m_input->setFilter("1234567890");
-    if (maxChars != -1) m_input->setMaxCharCount(maxChars);
 
     auto topSpr = CCSprite::createWithSpriteFrameName("GJ_arrow_01_001.png");
     topSpr->setRotation(90);
@@ -55,10 +43,10 @@ bool NumberInput::init(std::string title, int max, InputType type) {
     m_topMenu->setContentSize(m_topButton->getContentSize());
     m_bottomMenu->setContentSize(m_bottomButton->getContentSize());
 
-    m_titleLabel = CCLabelBMFont::create(title.c_str(), "bigFont.fnt");
-    m_titleLabel->setScale(0.5f);
+    auto titleLabel = CCLabelBMFont::create(title.c_str(), "bigFont.fnt");
+    titleLabel->setScale(0.5f);
 
-    this->addChild(m_titleLabel);
+    this->addChild(titleLabel);
     this->addChild(m_topMenu);
     this->addChild(m_input);
     this->addChild(m_bottomMenu);

@@ -9,10 +9,8 @@ void HookedPauseLayer::tryQuit(CCObject* sender) {
         return;
     }
 
-    auto playLayer = PlayLayer::get();
-
     // thanks cvolton for the help!
-    int sessionAttempts = playLayer->m_attempts;
+    int sessionAttempts = PlayLayer::get()->m_attempts;
     int oldAttempts = gm.realLevel->m_attempts.value();
     gm.realLevel->handleStatsConflict(gm.currentLevel);
     gm.realLevel->m_attempts = sessionAttempts + oldAttempts;
@@ -22,14 +20,7 @@ void HookedPauseLayer::tryQuit(CCObject* sender) {
     auto layer = LevelLayer::create();
     auto scene = CCScene::create();
     scene->addChild(layer);
-    CCDirector::sharedDirector()->replaceScene(CCTransitionFade::create(.5f, scene));
-
-    playLayer->resetAudio();
-    FMODAudioEngine::get()->unloadAllEffects();
-
-    FMODAudioEngine::get()->playEffect("quitSound_01.ogg", 1.f, 0.f, 0.7f);
-
-    GameManager::get()->fadeInMenuMusic();
+    CCDirector::sharedDirector()->pushScene(CCTransitionFade::create(.5f, scene));
 }
 
 void HookedPauseLayer::customSetup() {

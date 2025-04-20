@@ -48,11 +48,7 @@ const std::string GuessManager::getServerUrl() {
 }
 
 void GuessManager::startNewGame(GameOptions options) {
-    
     auto doTheThing = [this, options]() {
-        m_loadingOverlay = LoadingOverlayLayer::create();
-        m_loadingOverlay->addToScene();
-
         m_listener.bind([this, options] (web::WebTask::Event* e) {
             if (web::WebResponse* res = e->getValue()) {
                 if (res->code() != 200) {
@@ -81,7 +77,6 @@ void GuessManager::startNewGame(GameOptions options) {
                 glm->m_levelManagerDelegate = this;
                 glm->getOnlineLevels(GJSearchObject::create(SearchType::Search, std::to_string(levelId)));
             } else if (e->isCancelled()) {
-                if (m_loadingOverlay) m_loadingOverlay->removeMe();
                 log::error("request cancelled");
             }
         });
@@ -118,7 +113,6 @@ void GuessManager::startNewGame(GameOptions options) {
                 auto score = scoreResult.unwrap();
                 totalScore = score;
             } else if (e->isCancelled()) {
-                if (m_loadingOverlay) m_loadingOverlay->removeMe();
                 log::error("request cancelled");
             }
         });
@@ -169,9 +163,6 @@ void GuessManager::startNewGame(GameOptions options) {
 }
 
 void GuessManager::submitGuess(LevelDate date, std::function<void(int score, std::string correctDate, LevelDate date)> callback) {
-    m_loadingOverlay = LoadingOverlayLayer::create();
-    m_loadingOverlay->addToScene();
-
     m_listener.bind([this, callback, date] (web::WebTask::Event* e) {
         if (web::WebResponse* res = e->getValue()) {
             if (res->code() != 200) {
@@ -204,10 +195,8 @@ void GuessManager::submitGuess(LevelDate date, std::function<void(int score, std
                 correctDate = correctDateResult.unwrap();
             }
             
-            if (m_loadingOverlay) m_loadingOverlay->removeMe();
             callback(score, correctDate, date);
         } else if (e->isCancelled()) {
-            if (m_loadingOverlay) m_loadingOverlay->removeMe();
             log::error("request cancelled");
         }
     });
@@ -227,16 +216,12 @@ void GuessManager::endGame() {
                 }
 
                 currentLevel = nullptr;
-                
-                if (m_loadingOverlay) m_loadingOverlay->removeMe();
-                m_loadingOverlay = nullptr;
 
                 auto layer = CreatorLayer::create();
                 auto scene = CCScene::create();
                 scene->addChild(layer);
                 CCDirector::sharedDirector()->pushScene(CCTransitionFade::create(.5f, scene));
             } else if (e->isCancelled()) {
-                if (m_loadingOverlay) m_loadingOverlay->removeMe();
                 log::error("request cancelled");
             }
         });
@@ -250,12 +235,8 @@ void GuessManager::endGame() {
         "End Game?",
         "Are you sure you want to <cr>end the game</c>?",
         "No", "Yes",
-        [this, doTheThing](auto, bool btn2) {
+        [doTheThing](auto, bool btn2) {
             if (!btn2) return;
-
-            m_loadingOverlay = LoadingOverlayLayer::create();
-            m_loadingOverlay->addToScene();
-
             doTheThing();
         }
     );
@@ -326,9 +307,6 @@ void GuessManager::levelDownloadFinished(GJGameLevel* level) {
 
     realLevel = level;
 
-    if (m_loadingOverlay) m_loadingOverlay->removeMe();
-    m_loadingOverlay = nullptr;
-
     this->currentLevel = GJGameLevel::create();
     this->currentLevel->copyLevelInfo(level);
     this->currentLevel->m_levelName = "???????";
@@ -342,7 +320,4 @@ void GuessManager::levelDownloadFinished(GJGameLevel* level) {
 
 void GuessManager::levelDownloadFailed(int x) {
     log::warn("could not fetch level, code {}", x);
-
-    if (m_loadingOverlay) m_loadingOverlay->removeMe();
-    m_loadingOverlay = nullptr;
 }
