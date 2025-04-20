@@ -20,34 +20,9 @@ bool LevelLayer::init() {
     auto director = CCDirector::sharedDirector();
     auto size = director->getWinSize();
 
-    auto background = CCSprite::create("GJ_gradientBG.png");
-    background->setScaleX(
-        size.width / background->getContentWidth()
-    );
-    background->setScaleY(
-        size.height / background->getContentHeight()
-    );
-    background->setAnchorPoint({ 0, 0 });
-    background->setColor({ 0, 102, 255 });
-    background->setZOrder(-10);
-
-    auto sideArtBottomLeft = CCSprite::createWithSpriteFrameName("GJ_sideArt_001.png");
-    sideArtBottomLeft->setAnchorPoint(ccp(0.f, 0.f));
-    sideArtBottomLeft->setPosition(ccp(director->getScreenLeft() - 1.f, director->getScreenBottom() - 1.f));
-    addChild(sideArtBottomLeft, -2);
-
-    auto sideArtBottomRight = CCSprite::createWithSpriteFrameName("GJ_sideArt_001.png");
-    sideArtBottomRight->setAnchorPoint(ccp(1.f, 0.f));
-    sideArtBottomRight->setPosition(ccp(director->getScreenRight() + 1.f, director->getScreenBottom() - 1.f));
-    sideArtBottomRight->setFlipX(true);
-    addChild(sideArtBottomRight, -2);
-
-    auto sideArtTopRight = CCSprite::createWithSpriteFrameName("GJ_sideArt_001.png");
-    sideArtTopRight->setAnchorPoint(ccp(1.f, 1.f));
-    sideArtTopRight->setPosition(ccp(director->getScreenRight() + 1.f, director->getScreenTop() + 1.f));
-    sideArtTopRight->setFlipX(true);
-    sideArtTopRight->setFlipY(true);
-    addChild(sideArtTopRight, -2);
+    auto background = createLayerBG();
+    addSideArt(this, SideArt::Bottom);
+    addSideArt(this, SideArt::TopRight);
 
     auto& gm = GuessManager::get();
 
@@ -146,7 +121,7 @@ bool LevelLayer::init() {
     m_playBtn->setPosition(buttonMenu->convertToNodeSpace(ccp(size.width * 0.5f, size.height * 0.5f + 51.f)));
     m_guessBtn->setPosition(buttonMenu->convertToNodeSpace(ccp(size.width * 0.5f, size.height * 0.5f - 26.f)));
 
-    this->addChild(background);
+    this->addChild(background, -5);
     this->addChild(buttonMenu);
 
     auto closeBtnSprite = CCSprite::createWithSpriteFrameName("GJ_arrow_01_001.png");

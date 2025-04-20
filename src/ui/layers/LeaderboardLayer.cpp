@@ -59,21 +59,18 @@ GDGLeaderboardLayer* GDGLeaderboardLayer::create() {
 }
 
 bool GDGLeaderboardLayer::init() {
+    if (!CCLayer::init())
+        return false;
+
     auto director = CCDirector::sharedDirector();
     auto size = director->getWinSize();
 
-    auto background = CCSprite::create("GJ_gradientBG.png");
-    background->setScaleX(
-        size.width / background->getContentWidth()
-    );
-    background->setScaleY(
-        size.height / background->getContentHeight()
-    );
-    background->setAnchorPoint({ 0, 0 });
-    background->setColor({ 0, 102, 255 });
-    background->setZOrder(-10);
+    auto background = createLayerBG();
+    addSideArt(this, SideArt::Bottom);
+    addSideArt(this, SideArt::TopRight);
 
-    this->addChild(background);
+    this->addChild(background, -5);
+
 
     auto closeBtnSprite = CCSprite::createWithSpriteFrameName("GJ_arrow_01_001.png");
     auto closeBtn = CCMenuItemExt::createSpriteExtra(
@@ -84,7 +81,7 @@ bool GDGLeaderboardLayer::init() {
 
     auto closeMenu = CCMenu::create();
     closeMenu->addChild(closeBtn);
-    closeMenu->setPosition({ 30, size.height - 30 });
+    closeMenu->setPosition({ 24.f, director->getScreenTop() - 23.f });
     this->addChild(closeMenu);
 
     auto spinner = LoadingSpinner::create(100.f);
