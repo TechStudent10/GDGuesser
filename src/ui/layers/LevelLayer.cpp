@@ -12,6 +12,48 @@ LevelLayer* LevelLayer::create() {
     return nullptr;
 }
 
+static int getLevelDifficulty(GJGameLevel* level) {
+    if (level->m_autoLevel) return 0;
+    auto diff = level->m_difficulty;
+
+    if (level->m_ratingsSum != 0)
+        diff = static_cast<GJDifficulty>(level->m_ratingsSum / 10);
+
+    if (level->m_demon > 0) {
+        switch (level->m_demonDifficulty) {
+            case 3: return 7;
+            case 4: return 8;
+            case 5: return 9;
+            case 6: return 10;
+            default: return 6;
+        }
+    }
+
+    switch (diff) {
+        case GJDifficulty::Easy: return 1;
+        case GJDifficulty::Normal: return 2;
+        case GJDifficulty::Hard: return 3;
+        case GJDifficulty::Harder: return 4;
+        case GJDifficulty::Insane: return 5;
+        case GJDifficulty::Demon: return 6;
+        default: return -1;
+    }
+}
+
+static std::string getLevelLength(GJGameLevel* level) {
+    
+
+    switch (level->m_levelLength) {
+        case 0: return "Tiny";
+        case 1: return "Short";
+        case 2: return "Medium";
+        case 3: return "Long";
+        case 4: return "XL";
+        case 5: return "Plat.";
+        default: return 0;
+    }
+}
+
 bool LevelLayer::init() {
     auto director = CCDirector::sharedDirector();
     auto size = director->getWinSize();
@@ -26,6 +68,15 @@ bool LevelLayer::init() {
     background->setAnchorPoint({ 0, 0 });
     background->setColor({ 0, 102, 255 });
     background->setZOrder(-10);
+
+    auto bottomLeftArt = CCSprite::createWithSpriteFrameName("GJ_sideArt_001.png");
+    bottomLeftArt->setPosition({ -1.f, -1.f });
+    bottomLeftArt->setAnchorPoint({ 0, 0 });
+
+    auto bottomRightArt = CCSprite::createWithSpriteFrameName("GJ_sideArt_001.png");
+    bottomRightArt->setPosition({ size.width + 1.f, -1.f });
+    bottomRightArt->setAnchorPoint({ 0, 0 });
+    bottomRightArt->setRotation(-90.f);
 
     auto& gm = GuessManager::get();
 
@@ -51,11 +102,74 @@ bool LevelLayer::init() {
         "goldFont.fnt"
     );
 
+    auto difficultySprite = GJDifficultySprite::create(
+        gm.options.mode == GameMode::Normal ? getLevelDifficulty(gm.realLevel) : 0,
+        static_cast<GJDifficultyName>(0)
+    );
+
+    auto starsLabel = CCLabelBMFont::create(
+        gm.options.mode == GameMode::Normal ? fmt::format("{}", (gm.realLevel->m_stars).value()).c_str() : "??",
+        "bigFont.fnt"
+    );
+
+    auto starsIcon = CCSprite::createWithSpriteFrameName(
+        "star_small01_001.png"
+    );
+
+    auto downloadsLabel = CCLabelBMFont::create(
+        gm.options.mode == GameMode::Normal ? fmt::format("{}", gm.realLevel->m_downloads).c_str() : "????",
+        "bigFont.fnt"
+    );
+
+    auto downloadsIcon = CCSprite::createWithSpriteFrameName(
+        "GJ_downloadsIcon_001.png"
+    );
+
+    auto likesLabel = CCLabelBMFont::create(
+        gm.options.mode == GameMode::Normal ? fmt::format("{}", gm.realLevel->m_likes).c_str() : "????",
+        "bigFont.fnt"
+    );
+
+    auto likesIcon = CCSprite::createWithSpriteFrameName(
+        "GJ_likesIcon_001.png"
+    );
+
+    auto durationLabel = CCLabelBMFont::create(
+        gm.options.mode == GameMode::Normal ? fmt::format("{}", getLevelLength(gm.realLevel)).c_str() : "????",
+        "bigFont.fnt"
+    );
+
+    auto durationIcon = CCSprite::createWithSpriteFrameName(
+        "GJ_timeIcon_001.png"
+    );
+
     nameLabel->setPosition({ size.width * 0.5f, director->getScreenTop() - 17.f });
     authorLabel->setPosition({ size.width * 0.5f, nameLabel->getPositionY() - 22.f });
+    difficultySprite->setPosition({ size.width * 0.5f - 100.f, 226.f});
+    starsLabel->setPosition({ difficultySprite->getPositionX(), difficultySprite->getPositionY() - 30.f});
+    starsIcon->setPosition({ starsLabel->getPositionX() + 8.f, starsLabel->getPositionY() });
+    downloadsIcon->setPosition({ size.width * 0.5f + 80.f, 249.f});
+    likesIcon->setPosition({ downloadsIcon->getPositionX(), downloadsIcon->getPositionY() - 27.f });
+    durationIcon->setPosition({ downloadsIcon->getPositionX(), downloadsIcon->getPositionY() - 56.f });
+    downloadsLabel->setPosition({ downloadsIcon->getPositionX() + 33.f, downloadsIcon->getPositionY() });
+    likesLabel->setPosition({ likesIcon->getPositionX() + 33.f, likesIcon->getPositionY() });
+    durationLabel->setPosition({ durationIcon->getPositionX() + 33.f, durationIcon->getPositionY() });
+
 
     nameLabel->limitLabelWidth(300.f, 0.8f, 0.0f);
     authorLabel->limitLabelWidth(300.f, 0.8f, 0.0f);
+
+    starsLabel->setScale(0.4f);
+    starsLabel->setAnchorPoint({ 1.f, 0.5f });
+    downloadsLabel->setScale(0.5f);
+    downloadsLabel->setAnchorPoint({ 0.f, 0.5f });
+    likesLabel->setScale(0.5f);
+    likesLabel->setAnchorPoint({ 0.f, 0.5f });
+    durationLabel->setScale(0.5f);
+    durationLabel->setAnchorPoint({ 0.f, 0.5f });
+    downloadsIcon->setAnchorPoint({ 0.f, 0.5f });
+    likesIcon->setAnchorPoint({ 0.f, 0.5f });
+    durationIcon->setAnchorPoint({ 0.f, 0.5f });
 
     if (gm.realLevel->m_accountID == 0) {
         authorLabel->setColor({ 90, 255, 255 });
@@ -63,6 +177,15 @@ bool LevelLayer::init() {
 
     this->addChild(nameLabel);
     this->addChild(authorLabel);
+    this ->addChild(difficultySprite);
+    this->addChild(starsLabel);
+    this->addChild(starsIcon);
+    this->addChild(downloadsLabel);
+    this->addChild(downloadsIcon);
+    this->addChild(likesLabel);
+    this->addChild(likesIcon);
+    this->addChild(durationLabel);
+    this->addChild(durationIcon);
 
     auto songWidget = CustomSongWidget::create(LevelTools::getSongObject(gm.currentLevel->m_songID), nullptr, false, false, true, gm.currentLevel->m_songID < 30, false, false, 0);
     songWidget->getSongInfoIfUnloaded();
@@ -81,6 +204,8 @@ bool LevelLayer::init() {
 
     this->addChild(background);
     this->addChild(buttonMenu);
+    this->addChild(bottomLeftArt);
+    this->addChild(bottomRightArt);
 
     auto closeBtnSprite = CCSprite::createWithSpriteFrameName("GJ_arrow_01_001.png");
     auto closeBtn = CCMenuItemExt::createSpriteExtra(
