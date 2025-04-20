@@ -28,17 +28,16 @@ bool LoadingOverlayLayer::init() {
 
     addChildAtPosition(LoadingSpinner::create(100.f), Anchor::Center, ccp(0, 0), false);
 
-    SceneManager::get()->keepAcrossScenes(this);
-
+    
     this->setTouchEnabled(true);
     this->setKeypadEnabled(true);
     this->setZOrder(999);
-
+    
     return true;
 }
 
 void LoadingOverlayLayer::addToScene() {
-    CCScene::get()->addChild(this);
+    SceneManager::get()->keepAcrossScenes(this);
 }
 
 void LoadingOverlayLayer::removeMe() {
