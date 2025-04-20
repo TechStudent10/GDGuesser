@@ -1,6 +1,8 @@
 #include "LeaderboardLayer.hpp"
 #include <managers/GuessManager.hpp>
 
+#include <Geode/ui/LoadingSpinner.hpp>
+
 class UserCell : public CCNode {
 protected:
     bool init(LeaderboardEntry lbEntry, float width) {
@@ -85,9 +87,13 @@ bool GDGLeaderboardLayer::init() {
     closeMenu->setPosition({ 30, size.height - 30 });
     this->addChild(closeMenu);
 
+    auto spinner = LoadingSpinner::create(100.f);
+    spinner->setPosition(size / 2);
+    this->addChild(spinner);
+
     auto& gm = GuessManager::get();
     float listWidth = 400.f;
-    gm.getLeaderboard([this, listWidth, size](std::vector<LeaderboardEntry> lb) {
+    gm.getLeaderboard([this, listWidth, size, spinner](std::vector<LeaderboardEntry> lb) {
         auto listItems = CCArray::create();
         for (auto item : lb) {
             auto cell = UserCell::create(item, listWidth);
@@ -102,6 +108,8 @@ bool GDGLeaderboardLayer::init() {
         listLayer->ignoreAnchorPointForPosition(false);
         listLayer->setAnchorPoint({ 0.5f, 0.5f });
         listLayer->setPosition({ size.width / 2, size.height / 2 - 20.f });
+
+        spinner->removeFromParent();
 
         // auto listBorder = ListBorders::create();
         // listBorder->addChild(listNode);
