@@ -35,7 +35,7 @@ bool NumberInput::init(std::string title, int max, InputType type) {
         auto newVal = this->getValue() + 1;
         m_input->setString(std::to_string(newVal > m_max ? 0 : newVal));
     });
-    m_topButton->ignoreAnchorPointForPosition(true);
+    m_topButton->setPosition(topSpr->getContentSize() * .5f);
 
     auto bottomSpr = CCSprite::createWithSpriteFrameName("GJ_arrow_01_001.png");
     bottomSpr->setRotation(-90);
@@ -44,7 +44,7 @@ bool NumberInput::init(std::string title, int max, InputType type) {
         auto newVal = this->getValue() - 1;
         m_input->setString(std::to_string(newVal < 0 ? m_max : newVal));
     });
-    m_bottomButton->ignoreAnchorPointForPosition(true);
+    m_bottomButton->setPosition(bottomSpr->getContentSize() * .5f);
 
     m_topMenu = CCMenu::create();
     m_bottomMenu = CCMenu::create();
