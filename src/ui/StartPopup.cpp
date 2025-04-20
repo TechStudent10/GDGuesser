@@ -1,9 +1,11 @@
 #include "StartPopup.hpp"
 #include <managers/GuessManager.hpp>
 #include <ui/layers/LeaderboardLayer.hpp>
+#include <ui/layers/LoadingOverlayLayer.hpp>
 
 class DifficultySelectionPopup : public geode::Popup<> {
 protected:
+
     bool setup() {
         this->setTitle("Select your difficulty!");
 

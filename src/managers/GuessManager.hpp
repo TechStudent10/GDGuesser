@@ -2,6 +2,7 @@
 
 #include <Geode/Geode.hpp>
 #include <Geode/utils/web.hpp>
+#include <ui/layers/LoadingOverlayLayer.hpp>
 
 using namespace geode::prelude;
 
@@ -72,6 +73,8 @@ public:
     // actual level being guessed
     // (using data copied from realLevel using GJGameLevel::copyLevelInfo)
     Ref<GJGameLevel> currentLevel;
+
+    LoadingOverlayLayer* m_loadingOverlay;
 
     int totalScore = 0;
 

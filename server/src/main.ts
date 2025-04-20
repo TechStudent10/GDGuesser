@@ -135,7 +135,11 @@ async function checkToken(token: string) {
     return req 
 }
 
-router.post("/start-new-game", async (req, res) => {
+router.get("/", (req, res) => {
+    res.send("we are up and running! go get guessing!")
+})
+
+router.post("/", async (req, res, next) => {
     const token = req.headers.authorization || "";
     const daResp = await checkToken(token)
 
@@ -143,6 +147,18 @@ router.post("/start-new-game", async (req, res) => {
         res.status(401).send("invalid token")
         return
     }
+
+    next()
+})
+
+router.post("/start-new-game", async (req, res) => {
+    const token = req.headers.authorization || "";
+    const daResp = await checkToken(token)
+
+    // if (daResp.status === 401) {
+    //     res.status(401).send("invalid token")
+    //     return
+    // }
 
     const data = (await daResp.json())["data"]
     if (Object.keys(games).includes(data["id"])) {
