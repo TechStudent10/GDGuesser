@@ -31,7 +31,10 @@ bool GuessPopup::setup() {
     m_mainLayer->addChildAtPosition(m_monthInput, Anchor::Center);
     m_mainLayer->addChildAtPosition(m_dayInput, Anchor::Center, ccp(80.f, 0.f));
 
-    auto submitBtn = CCMenuItemExt::createSpriteExtra(ButtonSprite::create("Guess!"), [this](CCObject*) {
+    auto submitSpr = ButtonSprite::create("Guess!", .9f);
+    submitSpr->setScale(.8f);
+
+    auto submitBtn = CCMenuItemExt::createSpriteExtra(submitSpr, [this](CCObject*) {
         auto& gm = GuessManager::get();
 
         bool invalidDate = false;
@@ -77,7 +80,7 @@ bool GuessPopup::setup() {
 
     submitMenu->addChild(submitBtn);
 
-    m_mainLayer->addChildAtPosition(submitMenu, Anchor::Bottom, ccp(0.f, 20.f));
+    m_mainLayer->addChildAtPosition(submitMenu, Anchor::Bottom, ccp(0.f, 23.f));
 
     return true;
 }
