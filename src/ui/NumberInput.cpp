@@ -1,8 +1,8 @@
 #include "NumberInput.hpp"
 
-NumberInput* NumberInput::create(std::string title, int max, InputType type) {
+NumberInput* NumberInput::create(std::string title, int max, int min, InputType type) {
     auto ret = new NumberInput;
-    if (ret->init(title, max, type)) {
+    if (ret->init(title, max, min, type)) {
         ret->autorelease();
         return ret;
     }
@@ -10,8 +10,9 @@ NumberInput* NumberInput::create(std::string title, int max, InputType type) {
     return nullptr;
 }
 
-bool NumberInput::init(std::string title, int max, InputType type) {
+bool NumberInput::init(std::string title, int max, int min, InputType type) {
     m_max = max;
+    m_min = min;
 
     std::string placeholder = "0";
     int maxChars = -1;
@@ -33,7 +34,7 @@ bool NumberInput::init(std::string title, int max, InputType type) {
     topSpr->setRotation(90);
     m_topButton = CCMenuItemExt::createSpriteExtra(topSpr, [this](CCObject*) {
         auto newVal = this->getValue() + 1;
-        m_input->setString(std::to_string(newVal > m_max ? 0 : newVal));
+        m_input->setString(std::to_string(newVal > m_max ? m_min : m_min > newVal ? m_min : newVal));
     });
     m_topButton->setPosition(topSpr->getContentSize() * .5f);
 
@@ -42,7 +43,7 @@ bool NumberInput::init(std::string title, int max, InputType type) {
     bottomSpr->setFlipY(true);
     m_bottomButton = CCMenuItemExt::createSpriteExtra(bottomSpr, [this](CCObject*) {
         auto newVal = this->getValue() - 1;
-        m_input->setString(std::to_string(newVal < 0 ? m_max : newVal));
+        m_input->setString(std::to_string(newVal < m_min ? m_max : newVal));
     });
     m_bottomButton->setPosition(bottomSpr->getContentSize() * .5f);
 

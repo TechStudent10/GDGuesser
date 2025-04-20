@@ -13,7 +13,7 @@ enum class InputType {
 
 class NumberInput : public CCNode {
 protected:
-    bool init(std::string title, int max, InputType type);
+    bool init(std::string title, int max, int min, InputType type);
 
     CCMenu* m_topMenu;
     CCMenuItemSpriteExtra* m_topButton;
@@ -21,8 +21,9 @@ protected:
     CCMenu* m_bottomMenu;
     CCMenuItemSpriteExtra* m_bottomButton;
     int m_max;
-    public:
-    static NumberInput* create(std::string title, int max, InputType type);
+    int m_min;
+public:
+    static NumberInput* create(std::string title, int max, int min, InputType type);
     
     int getValue();
     

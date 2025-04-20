@@ -15,15 +15,15 @@ GuessPopup* GuessPopup::create() {
 bool GuessPopup::setup() {
     this->setTitle("Input your guess!");
     
-    m_yearInput = NumberInput::create("Year", 2025, InputType::Year);
+    m_yearInput = NumberInput::create("Year", 2025, 2013, InputType::Year);
     m_yearInput->setAnchorPoint({ 0.5f, 0.5f });
     m_yearInput->m_input->setDelegate(this);
     
-    m_monthInput = NumberInput::create("Month", 12, InputType::Month);
+    m_monthInput = NumberInput::create("Month", 12, 1, InputType::Month);
     m_monthInput->setAnchorPoint({ 0.5f, 0.5f });
     m_monthInput->m_input->setDelegate(this);
     
-    m_dayInput = NumberInput::create("Day", 31, InputType::Day);
+    m_dayInput = NumberInput::create("Day", 31, 1, InputType::Day);
     m_dayInput->setAnchorPoint({ 0.5f, 0.5f });
     m_dayInput->m_input->setDelegate(this);
     
