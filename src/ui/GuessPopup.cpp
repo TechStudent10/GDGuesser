@@ -83,11 +83,13 @@ bool GuessPopup::setup() {
 }
 
 void GuessPopup::textInputShouldOffset(CCTextInputNode* p0, float p1) {
+    auto size = CCDirector::get()->getWinSize();
     m_mainLayer->stopAllActions();
-    m_mainLayer->runAction(CCMoveTo::create(.2f, ccp(0, p1)));
+    m_mainLayer->runAction(CCMoveTo::create(.2f, ccp(size.width, size.height + p1)));
 }
 
 void GuessPopup::textInputReturn(CCTextInputNode* p0) {
+    auto size = CCDirector::get()->getWinSize();
     m_mainLayer->stopAllActions();
-    m_mainLayer->runAction(CCMoveTo::create(.2f, ccp(0, 0)));
+    m_mainLayer->runAction(CCMoveTo::create(.2f, size));
 }
