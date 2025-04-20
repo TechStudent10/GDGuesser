@@ -112,7 +112,7 @@ bool LevelLayer::init() {
     this->addChild(authorLabel);
 
     // This fixes the song being unknown? its weird but it works so who cares
-    auto songObject = gm.realLevel->m_songID == 0 ? LevelTools::getSongObject(gm.currentLevel->m_audioTrack) : SongInfoObject::create(gm.realLevel->m_songID);
+    auto songObject = gm.realLevel->m_songID == 0 ? LevelTools::getSongObject(gm.realLevel->m_audioTrack) : SongInfoObject::create(gm.realLevel->m_songID);
     auto songWidget = CustomSongWidget::create(songObject, nullptr, false, false, true, gm.realLevel->m_songID == 0, false, false, 0);
     
     songWidget->updateWithMultiAssets(gm.realLevel->m_songIDs, gm.realLevel->m_sfxIDs, 0);
