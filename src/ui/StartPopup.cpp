@@ -12,6 +12,7 @@ protected:
         auto startGame = [this](GameMode mode) {
             auto& gm = GuessManager::get();
             gm.startNewGame({ .mode = mode });
+            this->onClose(nullptr);
         };
 
         auto normalBtn = CCMenuItemExt::createSpriteExtra(ButtonSprite::create("Normal"), [startGame](CCObject*) {
