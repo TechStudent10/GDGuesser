@@ -70,9 +70,11 @@ bool NumberInput::init(std::string title, int max, int min, InputType type) {
 
     this->setContentHeight(100.f);
     this->setContentWidth(1.f);
-
+    
     this->updateLayout();
 
+    m_titleLabel->limitLabelWidth(100.f, .55f, .0f);
+    
     return true;
 }
 
