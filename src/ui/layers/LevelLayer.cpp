@@ -14,6 +14,9 @@ LevelLayer* LevelLayer::create() {
 }
 
 bool LevelLayer::init() {
+    if (!CCLayer::init())
+        return false;
+
     auto director = CCDirector::sharedDirector();
     auto size = director->getWinSize();
 
@@ -108,10 +111,11 @@ bool LevelLayer::init() {
     this->addChild(nameLabel);
     this->addChild(authorLabel);
 
-    auto songWidget = CustomSongWidget::create(LevelTools::getSongObject(gm.currentLevel->m_songID), nullptr, false, false, true, gm.currentLevel->m_songID < 30, false, false, 0);
-    songWidget->getSongInfoIfUnloaded();
+    // This fixes the song being unknown? its weird but it works so who cares
+    auto songObject = gm.realLevel->m_songID == 0 ? LevelTools::getSongObject(gm.currentLevel->m_audioTrack) : SongInfoObject::create(gm.realLevel->m_songID);
+    auto songWidget = CustomSongWidget::create(songObject, nullptr, false, false, true, gm.realLevel->m_songID == 0, false, false, 0);
+    
     songWidget->updateSongInfo();
-    songWidget->onGetSongInfo(nullptr);
     songWidget->setPosition({ size.width / 2, 50.f });
 
     this->addChild(songWidget);
