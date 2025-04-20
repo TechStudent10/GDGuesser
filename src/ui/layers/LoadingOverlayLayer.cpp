@@ -23,9 +23,12 @@ bool LoadingOverlayLayer::init() {
     this->setOpacity(0);
     this->runAction(CCFadeTo::create(0.14, 150));
 
-    this->runAction(CCSequence::create(CCDelayTime::create(TIMEOUT_SECONDS), CCCallFunc::create(this, callfunc_selector(LoadingOverlayLayer::forceRemoveLayer)), 0));
+    // This makes sure that the game can never softlock because of bad coding skills
+    this->runAction(CCSequence::create(CCDelayTime::create(TIMEOUT_SECONDS), CCCallFunc::create(this, callfunc_selector(LoadingOverlayLayer::removeMe)), 0));
 
     addChildAtPosition(LoadingSpinner::create(100.f), Anchor::Center, ccp(0, 0), false);
+
+    SceneManager::get()->keepAcrossScenes(this);
 
     this->setTouchEnabled(true);
     this->setKeypadEnabled(true);
@@ -38,6 +41,7 @@ void LoadingOverlayLayer::addToScene() {
     CCScene::get()->addChild(this);
 }
 
-void LoadingOverlayLayer::forceRemoveLayer() {
-    this->removeFromParentAndCleanup(true);
+void LoadingOverlayLayer::removeMe() {
+    SceneManager::get()->forget(this);
+    this->removeFromParent();
 }

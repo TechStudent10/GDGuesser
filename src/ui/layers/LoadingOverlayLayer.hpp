@@ -16,11 +16,10 @@ protected:
         cocos2d::CCTouchDispatcher::get()->addTargetedDelegate(this, -500, true);
     }
 
-    void forceRemoveLayer(); // Last ditch incase it gets stuck for some reason
-
-    static constexpr float TIMEOUT_SECONDS = 20.f;
+    static constexpr float TIMEOUT_SECONDS = 30.f; // How long it takes for the layer to remove itself
 public:
     static LoadingOverlayLayer* create();
 
     void addToScene();
+    void removeMe();
 };
