@@ -37,6 +37,7 @@ bool ResultsPopup::setup(int score, std::string correctDate, LevelDate date) {
     });
     
     auto nextRoundMenu = CCMenu::create();
+    nextRoundMenu->setContentWidth(m_mainLayer->getContentWidth());
     nextRoundMenu->addChild(endGameBtn);
     nextRoundMenu->addChild(nextRoundBtn);
 

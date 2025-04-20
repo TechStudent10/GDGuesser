@@ -17,13 +17,16 @@ bool GuessPopup::setup() {
     
     m_yearInput = NumberInput::create("Year", 2025, InputType::Year);
     m_yearInput->setAnchorPoint({ 0.5f, 0.5f });
-
+    m_yearInput->m_input->setDelegate(this);
+    
     m_monthInput = NumberInput::create("Month", 12, InputType::Month);
     m_monthInput->setAnchorPoint({ 0.5f, 0.5f });
-
+    m_monthInput->m_input->setDelegate(this);
+    
     m_dayInput = NumberInput::create("Day", 31, InputType::Day);
     m_dayInput->setAnchorPoint({ 0.5f, 0.5f });
-
+    m_dayInput->m_input->setDelegate(this);
+    
     m_mainLayer->addChildAtPosition(m_yearInput, Anchor::Center, ccp(-80.f, 0.f));
     m_mainLayer->addChildAtPosition(m_monthInput, Anchor::Center);
     m_mainLayer->addChildAtPosition(m_dayInput, Anchor::Center, ccp(80.f, 0.f));
@@ -70,9 +73,21 @@ bool GuessPopup::setup() {
     });
 
     auto submitMenu = CCMenu::create();
+    submitMenu->setContentWidth(m_mainLayer->getContentWidth());
+
     submitMenu->addChild(submitBtn);
 
     m_mainLayer->addChildAtPosition(submitMenu, Anchor::Bottom, ccp(0.f, 20.f));
 
     return true;
+}
+
+void GuessPopup::textInputShouldOffset(CCTextInputNode* p0, float p1) {
+    m_mainLayer->stopAllActions();
+    m_mainLayer->runAction(CCMoveTo::create(.2f, ccp(0, p1)));
+}
+
+void GuessPopup::textInputReturn(CCTextInputNode* p0) {
+    m_mainLayer->stopAllActions();
+    m_mainLayer->runAction(CCMoveTo::create(.2f, ccp(0, 0)));
 }
