@@ -5,7 +5,7 @@
 
 // thanks Vinster!
 static int getLevelDifficulty(GJGameLevel* level) {
-    if (level->m_autoLevel) return 0;
+    if (level->m_autoLevel) return -1;
     auto diff = level->m_difficulty;
 
     if (level->m_ratingsSum != 0)
@@ -28,7 +28,7 @@ static int getLevelDifficulty(GJGameLevel* level) {
         case GJDifficulty::Harder: return 4;
         case GJDifficulty::Insane: return 5;
         case GJDifficulty::Demon: return 6;
-        default: return -1;
+        default: return 0;
     }
 }
 
@@ -122,7 +122,7 @@ bool LevelLayer::init() {
     // thanks once again Vinster!!
     auto difficultySprite = GJDifficultySprite::create(
         gm.options.mode == GameMode::Normal ? getLevelDifficulty(gm.realLevel) : 0,
-        static_cast<GJDifficultyName>(0)
+        static_cast<GJDifficultyName>(1)
     );
 
     auto starsLabel = CCLabelBMFont::create(
@@ -134,8 +134,8 @@ bool LevelLayer::init() {
         "star_small01_001.png"
     );
 
-    difficultySprite->setPosition({ size.width * 0.5f - 100.f, 226.f});
-    starsLabel->setPosition({ difficultySprite->getPositionX(), difficultySprite->getPositionY() - 30.f});
+    difficultySprite->setPosition({ size.width * 0.5f - 100.f, gm.realLevel->m_demon > 0 && gm.options.mode == GameMode::Normal ? 231.f : 226.f});
+    starsLabel->setPosition({ difficultySprite->getPositionX(), difficultySprite->getPositionY() - (gm.realLevel->m_demon > 0 && gm.options.mode == GameMode::Normal ? 39.f : 30.f)});
     starsIcon->setPosition({ starsLabel->getPositionX() + 8.f, starsLabel->getPositionY() });
 
     starsLabel->setScale(0.4f);
