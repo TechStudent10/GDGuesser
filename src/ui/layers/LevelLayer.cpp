@@ -33,11 +33,13 @@ static int getLevelDifficulty(GJGameLevel* level) {
 }
 
 LevelLayer* LevelLayer::create() {
-    auto ret = new LevelLayer;
+    auto ret = new LevelLayer();
+
     if (ret->init()) {
         ret->autorelease();
         return ret;
     }
+    
     delete ret;
     return nullptr;
 }
