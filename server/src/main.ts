@@ -149,17 +149,24 @@ router.get("/", (req, res) => {
 })
 
 router.post("/account", async (req, res) => {
-    const token = req.headers.authorization || ""
+    const token = req.headers.authorization
     const account_id = req.body["account_id"]
     const daResp = await checkToken(token, account_id)
-
+    
     if (daResp.status !== 200) {
-        res.status(401).send("invalid token")
+        res.status(401).send(daResp.statusText)
         return
     }
 
     const data = await daResp.json()
+    
+    if (!data["valid_weak"]) {
+        res.status(401).send(`Invalid token: ${data["cause"]}`)
+        return
+    }
+
     const db = await openDB()
+    
     await db.run(`
         INSERT INTO scores (account_id, username, icon_id, color1, color2, color3, total_score, accuracy)
         VALUES (?, ?, ?, ?, ?, ?, 0, 0)    
@@ -181,11 +188,17 @@ router.post("/start-new-game", async (req, res) => {
     const daResp = await checkToken(token, account_id)
 
     if (daResp.status !== 200) {
-        res.status(401).send("invalid token")
+        res.status(401).send(daResp.statusText)
         return
     }
 
     const data = await daResp.json()
+    
+    if (!data["valid_weak"]) {
+        res.status(401).send(`Invalid token: ${data["cause"]}`)
+        return
+    }
+
     if (Object.keys(games).includes(account_id)) {
         res.status(400).send("game already in progress")
         return
@@ -212,10 +225,17 @@ router.post("/guess/:date", async (req, res) => {
     const daResp = await checkToken(token, account_id)
 
     if (daResp.status !== 200) {
-        res.status(401).send("invalid token")
+        res.status(401).send(daResp.statusText)
         return
     }
+
     const data = await daResp.json()
+    
+    if (!data["valid_weak"]) {
+        res.status(401).send(`Invalid token: ${data["cause"]}`)
+        return
+    }
+
     if (!Object.keys(games).includes(String(account_id))) {
         res.status(404).send("game does not exist. did you mean to call /start-new-game?")
         return
@@ -256,10 +276,17 @@ router.post("/endGame", async (req, res) => {
     const daResp = await checkToken(token, account_id)
 
     if (daResp.status !== 200) {
-        res.status(401).send("invalid token")
+        res.status(401).send(daResp.statusText)
         return
     }
+
     const data = await daResp.json()
+    
+    if (!data["valid_weak"]) {
+        res.status(401).send(`Invalid token: ${data["cause"]}`)
+        return
+    }
+
     if (!Object.keys(games).includes(String(account_id))) {
         res.status(404).send("game does not exist")
         return
