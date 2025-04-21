@@ -22,7 +22,6 @@ protected:
         scoreLabel->setPosition({ width - 25.f, CELL_HEIGHT - 15.f});
         scoreLabel->setAnchorPoint({ 1.f, 0.5f });
         
-        
         auto accuracyLabel = CCLabelBMFont::create(fmt::format("{:.1f}%", lbEntry.accuracy).c_str(), "bigFont.fnt");
         accuracyLabel->setScale(.6f);
         accuracyLabel->setAlignment(cocos2d::kCCTextAlignmentRight);

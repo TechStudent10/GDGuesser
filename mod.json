@@ -23,6 +23,13 @@
 			"description": "The server to connect to",
 			"name": "Server URL",
 			"filter": "1234567890qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNMM~!@#$%^&*()-=[]\\;',./_+{}|:\"?"
+		},
+		"date-format": {
+			"type":"string",
+			"name": "Date Format",
+			"default": "DD/MM/YYYY",
+			"one-of": ["DD/MM/YYYY", "MM/DD/YYYY", "YYYY/MM/DD"],
+			"description": "What date format to use, added this because Americans will be annoying about it otherwise."
 		}
 	}
 }

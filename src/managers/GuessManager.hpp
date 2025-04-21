@@ -23,7 +23,13 @@ struct LeaderboardEntry {
     float accuracy;
 };
 
-enum GameMode {
+enum class DateFormat {
+    Normal,
+    American,
+    Backwards
+};
+
+enum class GameMode {
     Normal,
     Hardcore
 };
@@ -94,6 +100,7 @@ public:
 
     void getLeaderboard(std::function<void(std::vector<LeaderboardEntry>)> callback);
     const std::string getServerUrl();
+    DateFormat getDateFormat();
 
     static GuessManager& get() {
         static GuessManager instance;

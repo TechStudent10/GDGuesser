@@ -14,6 +14,8 @@ GuessPopup* GuessPopup::create() {
 
 bool GuessPopup::setup() {
     this->setTitle("Input your guess!");
+
+    auto& gm = GuessManager::get();
     
     m_yearInput = NumberInput::create("Year", 2025, 2013, InputType::Year);
     m_yearInput->setAnchorPoint({ 0.5f, 0.5f });
@@ -26,17 +28,36 @@ bool GuessPopup::setup() {
     m_dayInput = NumberInput::create("Day", 31, 1, InputType::Day);
     m_dayInput->setAnchorPoint({ 0.5f, 0.5f });
     m_dayInput->m_input->setDelegate(this);
+
+    auto dayPosition = ccp(-80.f, .0f);
+    auto monthPosition = ccp(.0f, .0f);
+    auto yearPosition = ccp(80.f, .0f);
+
+    switch (gm.getDateFormat()) {
+        case DateFormat::American: {
+            monthPosition = ccp(-80.f, .0f);
+            dayPosition = ccp(.0f, .0f);
+            break;
+        }
+
+        case DateFormat::Backwards: {
+            yearPosition = ccp(-80.f, .0f);
+            dayPosition = ccp(80.f, .0f);
+        }
+
+        default: break;
+    }
     
-    m_mainLayer->addChildAtPosition(m_yearInput, Anchor::Center, ccp(-80.f, 0.f));
-    m_mainLayer->addChildAtPosition(m_monthInput, Anchor::Center);
-    m_mainLayer->addChildAtPosition(m_dayInput, Anchor::Center, ccp(80.f, 0.f));
+    m_mainLayer->addChildAtPosition(m_yearInput, Anchor::Center, yearPosition);
+    m_mainLayer->addChildAtPosition(m_monthInput, Anchor::Center, monthPosition);
+    m_mainLayer->addChildAtPosition(m_dayInput, Anchor::Center, dayPosition);
 
     auto submitSpr = ButtonSprite::create("Guess!", .9f);
     submitSpr->setScale(.8f);
 
     auto submitBtn = CCMenuItemExt::createSpriteExtra(submitSpr, [this](CCObject*) {
         auto& gm = GuessManager::get();
-
+        
         bool invalidDate = false;
 
         int year = m_yearInput->getValue();
@@ -61,7 +82,7 @@ bool GuessPopup::setup() {
             m_dayInput->m_titleLabel->runAction(CCTintTo::create(0.5f, 255, 255, 255));
             invalidDate = true;
         }
-
+        
         if (!invalidDate) {
             gm.submitGuess({
                 year,

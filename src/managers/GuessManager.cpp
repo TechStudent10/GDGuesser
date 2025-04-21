@@ -46,6 +46,22 @@ const std::string GuessManager::getServerUrl() {
     return str;
 }
 
+DateFormat GuessManager::getDateFormat() {
+    auto str = Mod::get()->getSettingValue<std::string>("date-format");
+    log::debug("str: {}", str);
+    if (str.empty()) {
+        log::error("date-format is empty, resetting to default");
+        Mod::get()->getSetting("date-format")->reset();
+    }
+
+    if (str.compare("MM/DD/YYYY") == 0)
+        return DateFormat::American;
+    else if (str.compare("YYYY/MM/DD") == 0)
+        return DateFormat::Backwards;
+    else
+        return DateFormat::Normal;
+}
+
 void GuessManager::setupRequest(web::WebRequest& req, matjson::Value body) {
     req.header("Authorization", m_daToken);
     body.set("account_id", GJAccountManager::get()->m_accountID);
