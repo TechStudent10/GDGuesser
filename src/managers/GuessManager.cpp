@@ -1,8 +1,7 @@
 #include "GuessManager.hpp"
 #include <ui/layers/LevelLayer.hpp>
 
-#include <dashauth.hpp>
-using namespace dashauth;
+#include <argon/argon.hpp>
 
 // stolen from https://github.com/GlobedGD/globed2/blob/main/src/util/gd.cpp#L11
 void reorderDownloadedLevel(GJGameLevel* level) {
@@ -47,6 +46,12 @@ const std::string GuessManager::getServerUrl() {
     return str;
 }
 
+void GuessManager::setupRequest(web::WebRequest& req, matjson::Value body) {
+    req.header("Authorization", m_daToken);
+    body.set("account_id", GJAccountManager::get()->m_accountID);
+    req.bodyJSON(body);
+}
+
 void GuessManager::startNewGame(GameOptions options) {
     // get total score
     auto getAcc = [this]() {
@@ -80,9 +85,8 @@ void GuessManager::startNewGame(GameOptions options) {
         });
 
         auto req = web::WebRequest();
-        req.header("Authorization", m_daToken);
         auto gm = GameManager::get();
-        req.bodyJSON(matjson::makeObject({
+        setupRequest(req, matjson::makeObject({
             {"icon_id", gm->getPlayerFrame()},
             {"color1", gm->m_playerColor.value()},
             {"color2", gm->m_playerColor2.value()},
@@ -133,30 +137,40 @@ void GuessManager::startNewGame(GameOptions options) {
         });
 
         auto req = web::WebRequest();
-        req.header("Authorization", m_daToken);
-        req.bodyJSON(matjson::makeObject({{"options", options}}));
+        setupRequest(req, matjson::makeObject({{"options", options}}));
         m_listener.setFilter(req.post(fmt::format("{}/start-new-game", getServerUrl())));
     };
     
     auto doAuthentication = [this, doTheThing]() {
         auto notif = Notification::create(
-            "Currently authenticating with DashAuth.\nThis will take 5-10 seconds. Please wait...",
+            "Currently authenticating with Argon.\nThis will take 5-10 seconds. Please wait...",
             NotificationIcon::Loading,  
             0.f);
         notif->show();
 
-        DashAuthRequest().getToken(Mod::get(), fmt::format("{}/dashauth/api/v1", getServerUrl()))->except([notif](std::string error) {
+        auto res = argon::startAuth([this, doTheThing, notif](Result<std::string> res) {
+            if (!res) {
+                FLAlertLayer::create(
+                    "Error",
+                    fmt::format("Argon authentication error: {}", res.unwrapErr()),
+                    "OK"
+                )->show();
+                notif->hide();
+            }
+
+            m_daToken = std::move(res).unwrap();
+            notif->hide();
+            doTheThing();
+        }, [](argon::AuthProgress progress) {});
+
+        if (!res) {
             FLAlertLayer::create(
                 "Error",
-                fmt::format("DashAuth authentication error: {}", error),
+                fmt::format("Argon authentication error: {}", res.unwrapErr()),
                 "OK"
             )->show();
             notif->hide();
-        })->then([this, doTheThing, notif](std::string token) {
-            m_daToken = token;
-            notif->hide();
-            doTheThing();
-        });
+        }
     };
 
     if (!m_daToken.empty()) {
@@ -226,7 +240,7 @@ void GuessManager::submitGuess(LevelDate date, std::function<void(int score, std
     });
 
     auto req = web::WebRequest();
-    req.header("Authorization", m_daToken);
+    setupRequest(req, matjson::makeObject({}));
     m_listener.setFilter(req.post(fmt::format("{}/guess/{}-{}-{}", getServerUrl(), date.year, date.month, date.day)));
 }
 
@@ -255,7 +269,7 @@ void GuessManager::endGame() {
         });
 
         auto req = web::WebRequest();
-        req.header("Authorization", m_daToken);
+        setupRequest(req, matjson::makeObject({}));
         m_listener.setFilter(req.post(fmt::format("{}/endGame", getServerUrl())));
     };
 

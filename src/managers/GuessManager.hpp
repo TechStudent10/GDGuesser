@@ -69,6 +69,8 @@ protected:
     void loadLevelsFailed(char const* p0) override {
         this->loadLevelsFailed(p0, 0);
     }
+
+    void setupRequest(web::WebRequest& req, matjson::Value body);
 public:
     // real level downloaded from the servers
     // (used to handle stats conflicts)

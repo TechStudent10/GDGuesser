@@ -117,23 +117,15 @@ function getRandomElement<T>(arr: Array<T>) {
 
 const getRandomLevelId = () => getRandomElement(levelIds[getRandomElement(Object.keys(ID_CUTOFFS))])
 
-function getDashAuthUrl() {
-    let str = process.env.DASHAUTH_URL
-    return str?.endsWith('/') ?
-        str.slice(0, -1) :
-        str
-}
+// function getDashAuthUrl() {
+//     let str = process.env.DASHAUTH_URL
+//     return str?.endsWith('/') ?
+//         str.slice(0, -1) :
+//         str
+// }
 
-async function checkToken(token: string) {
-    const req = await fetch(`${getDashAuthUrl()}/api/v1/verify`, {
-        method: "POST",
-        body: JSON.stringify({
-            token
-        }),
-        headers: {
-            "Content-Type": "application/json"
-        }
-    })
+async function checkToken(token: string, account_id: number) {
+    const req = await fetch(`https://argon.globed.dev/v1/validation/check_strong?authtoken=${token}&account_id=${account_id}`)
     return req 
 }
 
@@ -157,15 +149,16 @@ router.get("/", (req, res) => {
 })
 
 router.post("/account", async (req, res) => {
-    const token = req.headers.authorization || "";
-    const daResp = await checkToken(token)
+    const token = req.headers.authorization || ""
+    const account_id = req.body["account_id"]
+    const daResp = await checkToken(token, account_id)
 
-    if (daResp.status === 401) {
+    if (daResp.status !== 200) {
         res.status(401).send("invalid token")
         return
     }
 
-    const data = (await daResp.json())["data"]
+    const data = await daResp.json()
     const db = await openDB()
     await db.run(`
         INSERT INTO scores (account_id, username, icon_id, color1, color2, color3, total_score, accuracy)
@@ -173,40 +166,41 @@ router.post("/account", async (req, res) => {
         ON CONFLICT (account_id) DO
         UPDATE SET username = ?, icon_id = ?, color1 = ?, color2 = ?, color3 = ?
         `, 
-        data["id"], data["username"],
+        account_id, data["username"],
         req.body["icon_id"], req.body["color1"], req.body["color2"], req.body["color3"],
         data["username"],
         req.body["icon_id"], req.body["color1"], req.body["color2"], req.body["color3"]
     )
 
-    res.status(200).json(await getUser(data["id"]))
+    res.status(200).json(await getUser(account_id))
 })
 
 router.post("/start-new-game", async (req, res) => {
     const token = req.headers.authorization || "";
-    const daResp = await checkToken(token)
+    const account_id = req.body["account_id"]
+    const daResp = await checkToken(token, account_id)
 
-    if (daResp.status === 401) {
+    if (daResp.status !== 200) {
         res.status(401).send("invalid token")
         return
     }
 
-    const data = (await daResp.json())["data"]
-    if (Object.keys(games).includes(data["id"])) {
+    const data = await daResp.json()
+    if (Object.keys(games).includes(account_id)) {
         res.status(400).send("game already in progress")
         return
     }
 
     const id = getRandomLevelId()
-    games[data["id"]] = {
-        accountId: data["id"],
+    games[account_id] = {
+        accountId: account_id,
         currentLevelId: id,
         options: req.body["options"]
     }
 
     res.json({
         level: id,
-        game: games[data["id"]]
+        game: games[account_id]
     })
 })
 
@@ -214,20 +208,21 @@ router.post("/start-new-game", async (req, res) => {
 
 router.post("/guess/:date", async (req, res) => {
     const token = req.headers.authorization || ""
-    const daResp = await checkToken(token)
+    const account_id = req.body["account_id"]
+    const daResp = await checkToken(token, account_id)
 
-    if (daResp.status === 401) {
+    if (daResp.status !== 200) {
         res.status(401).send("invalid token")
         return
     }
-    const data = (await daResp.json())["data"]
-    if (!Object.keys(games).includes(data["id"].toString())) {
+    const data = await daResp.json()
+    if (!Object.keys(games).includes(String(account_id))) {
         res.status(404).send("game does not exist. did you mean to call /start-new-game?")
         return
     }
 
     const { date } = req.params
-    const levelId = games[data["id"]].currentLevelId
+    const levelId = games[account_id].currentLevelId
 
     const correctDate: string = (
     await (
@@ -235,7 +230,7 @@ router.post("/guess/:date", async (req, res) => {
     )["approx"]["estimation"]
     .split("T")[0]
 
-    const scoreResult = calcScore(stringToLvlDate(date), stringToLvlDate(correctDate), games[data["id"]].options.mode)
+    const scoreResult = calcScore(stringToLvlDate(date), stringToLvlDate(correctDate), games[account_id].options.mode)
     const score = scoreResult[0]
     const accuracy = scoreResult[1]
 
@@ -245,9 +240,9 @@ router.post("/guess/:date", async (req, res) => {
         VALUES (?, ?, ?, ?, ?)    
         ON CONFLICT (account_id) DO
         UPDATE SET username = ?, total_score = total_score + ?, accuracy = (accuracy + ?) / 2
-    `, data["id"], data["username"], score, 1, accuracy, data["username"], score, accuracy)
+    `, account_id, data["username"], score, 1, accuracy, data["username"], score, accuracy)
 
-    delete games[data["id"]]
+    delete games[account_id]
 
     res.json({
         score,
@@ -257,19 +252,20 @@ router.post("/guess/:date", async (req, res) => {
 
 router.post("/endGame", async (req, res) => {
     const token = req.headers.authorization || ""
-    const daResp = await checkToken(token)
+    const account_id = req.body["account_id"]
+    const daResp = await checkToken(token, account_id)
 
-    if (daResp.status === 401) {
+    if (daResp.status !== 200) {
         res.status(401).send("invalid token")
         return
     }
-    const data = (await daResp.json())["data"]
-    if (!Object.keys(games).includes(data["id"].toString())) {
+    const data = await daResp.json()
+    if (!Object.keys(games).includes(String(account_id))) {
         res.status(404).send("game does not exist")
         return
     }
 
-    delete games[data["id"]]
+    delete games[account_id]
 
     res.status(200).send()
 })
@@ -295,18 +291,6 @@ router.get("/leaderboard", async (req, res) => {
         LIMIT 100
     `)
     res.json(results)
-})
-
-router.use("/dashauth", async (req, res, next) => {
-    const resp = await (await fetch(`${getDashAuthUrl()}${req.path.replace("dashauth", "")}`, {
-        body: req.body,
-        headers: Object(req.headers),
-        method: req.method
-    })).json()
-
-    // console.log(resp)
-
-    res.json(resp)
 })
 
 const port = process.env.PORT || 8000
