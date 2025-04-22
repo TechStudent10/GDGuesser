@@ -75,7 +75,7 @@ void GuessManager::startNewGame(GameOptions options) {
         m_listener.bind([this] (web::WebTask::Event* e) {
             if (web::WebResponse* res = e->getValue()) {
                 if (res->code() != 200) {
-                    log::debug("received non-200 code: {}", res->code);
+                    log::debug("received non-200 code: {}", res->code());
                     return;
                 }
 
