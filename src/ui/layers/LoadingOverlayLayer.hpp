@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Geode/Geode.hpp>
+#include <Geode/ui/LoadingSpinner.hpp>
 
 using namespace geode::prelude;
 
@@ -17,6 +18,7 @@ protected:
     }
 
     static constexpr float TIMEOUT_SECONDS = 30.f; // How long it takes for the layer to remove itself
+    LoadingSpinner* m_spinner;
 public:
     static LoadingOverlayLayer* create();
 

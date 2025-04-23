@@ -120,31 +120,36 @@ void GuessManager::startNewGame(GameOptions options) {
     auto doTheThing = [this, options, getAcc]() {
         m_loadingOverlay = LoadingOverlayLayer::create();
         m_loadingOverlay->addToScene();
-
+        
         m_listener.bind([this, options, getAcc] (web::WebTask::Event* e) {
             if (web::WebResponse* res = e->getValue()) {
                 if (res->code() != 200) {
                     log::error("error starting new round; http code: {}, error: {}", res->code(), res->string().unwrapOr("unable to get error string"));
                     return;
                 }
-
+                
                 auto jsonRes = res->json();
                 if (jsonRes.isErr()) {
                     log::error("error getting json: {}", jsonRes.err());
                     return;
                 }
-
+                
                 auto json = jsonRes.unwrap();
-
+                
                 auto levelIdRes = json["level"].asInt();
                 if (levelIdRes.isErr()) {
                     log::error("error getting level id: {}", levelIdRes.err());
                     return;
                 }
 
+                if (this->realLevel && Mod::get()->getSettingValue<bool>("dont-save-levels")) {
+                    GameLevelManager::get()->deleteLevel(this->realLevel);
+                    this->realLevel = nullptr;
+                }
+                
                 auto levelId = levelIdRes.unwrap();
                 this->options = options;
-
+                
                 auto* glm = GameLevelManager::get();
                 glm->m_levelManagerDelegate = this;
                 glm->getOnlineLevels(GJSearchObject::create(SearchType::Search, std::to_string(levelId)));
@@ -261,18 +266,27 @@ void GuessManager::submitGuess(LevelDate date, std::function<void(int score, Lev
 
 void GuessManager::endGame() {
     auto doTheThing = [this]() {
+
+        m_loadingOverlay = LoadingOverlayLayer::create();
+        m_loadingOverlay->addToScene();
+
+        
         m_listener.bind([this] (web::WebTask::Event* e) {
             if (web::WebResponse* res = e->getValue()) {
                 if (res->code() != 200 && res->code() != 404) {
                     log::error("error ending game; http code: {}, error: {}", res->code(), res->string().unwrapOr("unable to get error string"));
                     return;
                 }
-
+                
+                if (this->realLevel && Mod::get()->getSettingValue<bool>("dont-save-levels")) {
+                    GameLevelManager::get()->deleteLevel(this->realLevel);
+                    this->realLevel = nullptr;
+                }
                 currentLevel = nullptr;
                 
                 if (m_loadingOverlay) m_loadingOverlay->removeMe();
                 m_loadingOverlay = nullptr;
-
+                
                 auto layer = CreatorLayer::create();
                 auto scene = CCScene::create();
                 scene->addChild(layer);
@@ -294,9 +308,6 @@ void GuessManager::endGame() {
         "No", "Yes",
         [this, doTheThing](auto, bool btn2) {
             if (!btn2) return;
-
-            m_loadingOverlay = LoadingOverlayLayer::create();
-            m_loadingOverlay->addToScene();
 
             doTheThing();
         }

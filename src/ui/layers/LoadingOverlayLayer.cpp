@@ -1,7 +1,5 @@
 #include "LoadingOverlayLayer.hpp"
 
-#include <Geode/ui/LoadingSpinner.hpp>
-
 LoadingOverlayLayer* LoadingOverlayLayer::create() {
     auto ret = new LoadingOverlayLayer();
 
@@ -20,19 +18,20 @@ bool LoadingOverlayLayer::init() {
 
     cocos2d::CCTouchDispatcher::get()->registerForcePrio(this, 2);
 
-    this->setOpacity(0);
-    this->runAction(CCFadeTo::create(0.14, 150));
-
+    m_spinner = LoadingSpinner::create(100.f);
+    
     // This makes sure that the game can never softlock because of bad coding skills
     this->runAction(CCSequence::create(CCDelayTime::create(TIMEOUT_SECONDS), CCCallFunc::create(this, callfunc_selector(LoadingOverlayLayer::removeMe)), 0));
-
-    addChildAtPosition(LoadingSpinner::create(100.f), Anchor::Center, ccp(0, 0), false);
-
+    
+    addChildAtPosition(m_spinner, Anchor::Center, ccp(0, 0), false);
     
     this->setTouchEnabled(true);
     this->setKeypadEnabled(true);
     this->setZOrder(999);
     
+    this->setOpacity(0);
+    this->runAction(CCFadeTo::create(.25f, 150));
+
     return true;
 }
 
