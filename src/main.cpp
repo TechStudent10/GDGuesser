@@ -14,7 +14,7 @@ class $modify(MyCL, CreatorLayer) {
             if (!Mod::get()->getSavedValue<bool>("seen-lb-reset-notice", false)) {
                 geode::createQuickPopup(
                     "Notice",
-                    "Due to issues with <cr>cheating</c> and <cy>changes in leaderboard sorting</c>, the leaderboard <cl>have been reset.</c>\nFor information on the new leaderboard system, <cg>click the info button on the leaderboard</c>.",
+                    "Due to issues with <cr>cheating</c> and <cy>changes in leaderboard sorting</c>, the leaderboard <cl>has been reset.</c>\nFor information on the new leaderboard system, <cg>click the info button on the leaderboard</c>.",
                     "OK", nullptr,
                     [](auto, bool) {
                         StartPopup::create()->show();
