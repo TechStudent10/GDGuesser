@@ -33,6 +33,11 @@ void reorderDownloadedLevel(GJGameLevel* level) {
     level->m_levelIndex = idx;
 }
 
+void GuessManager::updateStatusAndLoading(TaskStatus status) {
+    taskStatus = status;
+    if (loadingOverlay) loadingOverlay->updateStatus(status);
+}
+
 const std::string GuessManager::getServerUrl() {
     auto str = Mod::get()->getSettingValue<std::string>("server-url");
     if (str.ends_with("/")) {
@@ -75,8 +80,11 @@ void GuessManager::startNewGame(GameOptions options) {
     // get total score
     auto getAcc = [this]() {
         // EventListener<web::WebTask> listener;
+        updateStatusAndLoading(TaskStatus::GetScore);
         m_listener.bind([this] (web::WebTask::Event* e) {
             if (web::WebResponse* res = e->getValue()) {
+                if (loadingOverlay) loadingOverlay->removeMe();
+
                 if (res->code() != 200) {
                     log::debug("received non-200 code: {}", res->code());
                     return;
@@ -98,7 +106,7 @@ void GuessManager::startNewGame(GameOptions options) {
                 auto score = scoreResult.unwrap();
                 totalScore = score;
             } else if (e->isCancelled()) {
-                if (m_loadingOverlay) m_loadingOverlay->removeMe();
+                if (loadingOverlay) loadingOverlay->removeMe();
                 log::error("request cancelled");
             }
         });
@@ -118,8 +126,11 @@ void GuessManager::startNewGame(GameOptions options) {
     };
 
     auto doTheThing = [this, options, getAcc]() {
-        m_loadingOverlay = LoadingOverlayLayer::create();
-        m_loadingOverlay->addToScene();
+        if(!loadingOverlay) {
+            loadingOverlay = LoadingOverlayLayer::create();
+            loadingOverlay->addToScene();
+        }
+        updateStatusAndLoading(TaskStatus::Start);
         
         m_listener.bind([this, options, getAcc] (web::WebTask::Event* e) {
             if (web::WebResponse* res = e->getValue()) {
@@ -149,13 +160,16 @@ void GuessManager::startNewGame(GameOptions options) {
                 
                 auto levelId = levelIdRes.unwrap();
                 this->options = options;
+
+                if (loadingOverlay) loadingOverlay->removeMe();
                 
                 auto* glm = GameLevelManager::get();
                 glm->m_levelManagerDelegate = this;
                 glm->getOnlineLevels(GJSearchObject::create(SearchType::Search, std::to_string(levelId)));
                 getAcc();
+                updateStatusAndLoading(TaskStatus::GetLevel);
             } else if (e->isCancelled()) {
-                if (m_loadingOverlay) m_loadingOverlay->removeMe();
+                if (loadingOverlay) loadingOverlay->removeMe();
                 log::error("request cancelled");
             }
         });
@@ -166,24 +180,22 @@ void GuessManager::startNewGame(GameOptions options) {
     };
     
     auto doAuthentication = [this, doTheThing]() {
-        auto notif = Notification::create(
-            "Currently authenticating with Argon.\nThis will take 5-10 seconds. Please wait...",
-            NotificationIcon::Loading,  
-            0.f);
-        notif->show();
-
-        auto res = argon::startAuth([this, doTheThing, notif](Result<std::string> res) {
+        if(!loadingOverlay) {
+            loadingOverlay = LoadingOverlayLayer::create();
+            loadingOverlay->addToScene();
+        }
+        
+        updateStatusAndLoading(TaskStatus::Authenticate);
+        auto res = argon::startAuth([this, doTheThing](Result<std::string> res) {
             if (!res) {
                 FLAlertLayer::create(
                     "Error",
                     fmt::format("Argon authentication error: {}", res.unwrapErr()),
                     "OK"
                 )->show();
-                notif->hide();
             }
 
             m_daToken = std::move(res).unwrap();
-            notif->hide();
             doTheThing();
         }, [](argon::AuthProgress progress) {});
 
@@ -193,7 +205,6 @@ void GuessManager::startNewGame(GameOptions options) {
                 fmt::format("Argon authentication error: {}", res.unwrapErr()),
                 "OK"
             )->show();
-            notif->hide();
         }
     };
 
@@ -220,9 +231,12 @@ void GuessManager::startNewGame(GameOptions options) {
 }
 
 void GuessManager::submitGuess(LevelDate date, std::function<void(int score, LevelDate correctDate, LevelDate date)> callback) {
-    m_loadingOverlay = LoadingOverlayLayer::create();
-    m_loadingOverlay->addToScene();
+    if(!loadingOverlay) {
+        loadingOverlay = LoadingOverlayLayer::create();
+        loadingOverlay->addToScene();
+    }
 
+    updateStatusAndLoading(TaskStatus::SubmitGuess);
     m_listener.bind([this, callback, date] (web::WebTask::Event* e) {
         if (web::WebResponse* res = e->getValue()) {
             if (res->code() != 200) {
@@ -246,7 +260,7 @@ void GuessManager::submitGuess(LevelDate date, std::function<void(int score, Lev
             auto score = scoreResult.unwrap();
             totalScore += score;
             
-            if (m_loadingOverlay) m_loadingOverlay->removeMe();
+            if (loadingOverlay) loadingOverlay->removeMe();
             log::info("{}", static_cast<int>(json["correctDate"]["year"].asInt().unwrapOr(0)));
             callback(score, {
                 .year = static_cast<int>(json["correctDate"]["year"].asInt().unwrapOr(0)),
@@ -254,7 +268,7 @@ void GuessManager::submitGuess(LevelDate date, std::function<void(int score, Lev
                 .day = static_cast<int>(json["correctDate"]["day"].asInt().unwrapOr(0)),
             }, date);
         } else if (e->isCancelled()) {
-            if (m_loadingOverlay) m_loadingOverlay->removeMe();
+            if (loadingOverlay) loadingOverlay->removeMe();
             log::error("request cancelled");
         }
     });
@@ -267,10 +281,13 @@ void GuessManager::submitGuess(LevelDate date, std::function<void(int score, Lev
 void GuessManager::endGame() {
     auto doTheThing = [this]() {
 
-        m_loadingOverlay = LoadingOverlayLayer::create();
-        m_loadingOverlay->addToScene();
+        if(!loadingOverlay) {
+            loadingOverlay = LoadingOverlayLayer::create();
+            loadingOverlay->addToScene();
+        }
 
-        
+        updateStatusAndLoading(TaskStatus::EndGame);
+
         m_listener.bind([this] (web::WebTask::Event* e) {
             if (web::WebResponse* res = e->getValue()) {
                 if (res->code() != 200 && res->code() != 404) {
@@ -284,15 +301,15 @@ void GuessManager::endGame() {
                 }
                 currentLevel = nullptr;
                 
-                if (m_loadingOverlay) m_loadingOverlay->removeMe();
-                m_loadingOverlay = nullptr;
+                if (loadingOverlay) loadingOverlay->removeMe();
+                loadingOverlay = nullptr;
                 
                 auto layer = CreatorLayer::create();
                 auto scene = CCScene::create();
                 scene->addChild(layer);
                 CCDirector::sharedDirector()->pushScene(CCTransitionFade::create(.5f, scene));
             } else if (e->isCancelled()) {
-                if (m_loadingOverlay) m_loadingOverlay->removeMe();
+                if (loadingOverlay) loadingOverlay->removeMe();
                 log::error("request cancelled");
             }
         });
@@ -315,6 +332,7 @@ void GuessManager::endGame() {
 }
 
 void GuessManager::getLeaderboard(std::function<void(std::vector<LeaderboardEntry>)> callback) {
+    updateStatusAndLoading(TaskStatus::GetLeaderboard);
     m_listener.bind([this, callback] (web::WebTask::Event* e) {
         if (web::WebResponse* res = e->getValue()) {
             if (res->code() != 200) {
@@ -404,8 +422,8 @@ void GuessManager::levelDownloadFinished(GJGameLevel* level) {
 
     realLevel = level;
 
-    if (m_loadingOverlay) m_loadingOverlay->removeMe();
-    m_loadingOverlay = nullptr;
+    if (loadingOverlay) loadingOverlay->removeMe();
+    loadingOverlay = nullptr;
 
     this->currentLevel = GJGameLevel::create();
     this->currentLevel->copyLevelInfo(level);
@@ -424,8 +442,8 @@ void GuessManager::levelDownloadFinished(GJGameLevel* level) {
 void GuessManager::levelDownloadFailed(int x) {
     log::warn("could not fetch level, code {}", x);
 
-    if (m_loadingOverlay) m_loadingOverlay->removeMe();
-    m_loadingOverlay = nullptr;
+    if (loadingOverlay) loadingOverlay->removeMe();
+    loadingOverlay = nullptr;
 }
 
 int GuessManager::getLevelDifficulty(GJGameLevel* level) {
@@ -478,3 +496,32 @@ std::string GuessManager::encodeBase64(const std::string& input) {
     return ZipUtils::compressString(input, false, 0);
 }
 
+std::string GuessManager::statusToString(TaskStatus status) {
+    switch (status) {
+        case TaskStatus::Authenticate:
+            return "Authenticating\nWith Argon"; break;
+        
+        case TaskStatus::Start:
+            return "Starting"; break;
+        
+        case TaskStatus::GetLevel:
+            return "Downloading Level"; break;
+        
+        case TaskStatus::GetScore:
+            return "Getting Score"; break;
+        
+        case TaskStatus::GetLeaderboard:
+            return "Getting Leaderboard"; break;
+        
+        case TaskStatus::SubmitGuess:
+            return "Submitting Guess"; break;
+
+        case TaskStatus::EndGame:
+            return "Ending Game"; break;
+        
+        default:
+            return "Unknown"; break;
+    }
+
+    return "Unknown";
+}

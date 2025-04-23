@@ -2,6 +2,7 @@
 
 #include <Geode/Geode.hpp>
 #include <Geode/ui/LoadingSpinner.hpp>
+#include <managers/Enums.hpp>
 
 using namespace geode::prelude;
 
@@ -19,9 +20,13 @@ protected:
 
     static constexpr float TIMEOUT_SECONDS = 30.f; // How long it takes for the layer to remove itself
     LoadingSpinner* m_spinner;
+    CCLabelBMFont* m_statusLabel;
+
+    TaskStatus m_status;
 public:
     static LoadingOverlayLayer* create();
 
     void addToScene();
     void removeMe();
+    void updateStatus(TaskStatus status);
 };
