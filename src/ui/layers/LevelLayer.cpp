@@ -23,7 +23,7 @@ bool LevelLayer::init() {
     auto size = director->getWinSize();
 
     auto background = createLayerBG();
-    addSideArt(this, SideArt::Bottom);
+    addSideArt(this, SideArt::BottomRight);
     addSideArt(this, SideArt::TopRight);
 
     auto& gm = GuessManager::get();
@@ -73,12 +73,17 @@ bool LevelLayer::init() {
 
             m_playBtn->setEnabled(false);
             m_guessBtn->setEnabled(false);
+            m_settingsBtn->setEnabled(false);
         }
     });
 
     m_guessBtn = CCMenuItemExt::createSpriteExtra(ButtonSprite::create("Guess!"), [this](CCObject*) {
         auto popup = GuessPopup::create();
         popup->show();
+    });
+
+    m_settingsBtn = CCMenuItemExt::createSpriteExtraWithFrameName("GJ_optionsBtn_001.png", .7f, [gm, this](auto sender) {
+        GameLevelOptionsLayer::create(gm.currentLevel)->show();
     });
 
     auto nameLabel = CCLabelBMFont::create(
@@ -145,9 +150,11 @@ bool LevelLayer::init() {
     auto buttonMenu = CCMenu::create();
     buttonMenu->addChild(m_playBtn);
     buttonMenu->addChild(m_guessBtn);
+    buttonMenu->addChild(m_settingsBtn);
 
     m_playBtn->setPosition(buttonMenu->convertToNodeSpace(ccp(size.width * 0.5f, size.height * 0.5f + 51.f)));
     m_guessBtn->setPosition(buttonMenu->convertToNodeSpace(ccp(size.width * 0.5f, size.height * 0.5f - 26.f)));
+    m_settingsBtn->setPosition(buttonMenu->convertToNodeSpace(ccp(30.f, 30.f)));
 
     this->addChild(background, -5);
     this->addChild(buttonMenu);

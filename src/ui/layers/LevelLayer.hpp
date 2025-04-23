@@ -19,6 +19,7 @@ protected:
     CCSprite* m_playSprite = nullptr;
     CCMenuItemSpriteExtra* m_playBtn = nullptr;
     CCMenuItemSpriteExtra* m_guessBtn = nullptr;
+    CCMenuItemSpriteExtra* m_settingsBtn = nullptr;
 
     CCProgressTimer* m_progressTimer = nullptr;
 
