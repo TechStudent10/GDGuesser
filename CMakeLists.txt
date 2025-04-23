@@ -16,10 +16,10 @@ add_library(${PROJECT_NAME} SHARED ${SOURCES})
 
 # Github actions (Taken from EclipseMenu)
 if(DEFINED ENV{GITHUB_ACTIONS})
-# Enable LTO for smaller binaries
-set_property(TARGET ${PROJECT_NAME} PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
-target_compile_definitions(${PROJECT_NAME} PRIVATE GITHUB_ACTIONS)
-message(STATUS "GitHub Actions build detected")
+  # Enable LTO for smaller binaries
+  set_property(TARGET ${PROJECT_NAME} PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+  target_compile_definitions(${PROJECT_NAME} PRIVATE GITHUB_ACTIONS)
+  message(STATUS "GitHub Actions build detected")
 endif()
 
 target_include_directories(${PROJECT_NAME} PRIVATE src)
