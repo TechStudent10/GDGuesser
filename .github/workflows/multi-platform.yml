@@ -59,34 +59,3 @@ jobs:
         with:
           name: Build Output
           path: ${{ steps.build.outputs.build-output }}
-
-  release:
-    name: Release the mod
-    runs-on: ubuntu-latest
-    needs: ['package']
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: hiimjustin000/release-geode-mod@main
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          draft: true
-          # replace: true
-        
-      - uses: actions/download-artifact@v4
-        with:
-          name: Build Output
-          path: build-output
-
-      - uses: andelf/nightly-release@main
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: nightly
-          name: 'GDGuesser Nightly Release'
-          body: |
-            GDGuesser nightly release for ${{ github.sha }}. Do not expect a stable experience from a build here.
-          files: |
-            ./build-output/*.geode
-            ./build-output/*.pdb

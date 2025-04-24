@@ -94,6 +94,9 @@ public:
     void updateStatusAndLoading(TaskStatus status);
     void syncScores();
 
+    void safeRemoveLoadingLayer();
+    void safeAddLoadingLayer();
+
     void getLeaderboard(std::function<void(std::vector<LeaderboardEntry>)> callback);
     const std::string getServerUrl();
     DateFormat getDateFormat();

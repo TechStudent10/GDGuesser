@@ -8,7 +8,7 @@
 	},
 	"id": "techstudent10.gdguesser",
 	"name": "GDGuesser",
-	"version": "v1.0.0-beta.2",
+	"version": "v1.0.0-beta.5",
 	"developer": "TechStudent10",
 	"description": "Guess the date of Geometry Dash levels!",
 	"resources": {
@@ -40,5 +40,8 @@
 	},
 	"dependencies": {
 		"geode.node-ids": "v1.20.1"
+	},
+	"links": {
+		"community": "https://discord.gg/Bt5HkUSFTj"
 	}
 }
