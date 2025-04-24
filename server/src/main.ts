@@ -417,6 +417,7 @@ router.get("/leaderboard", async (req, res) => {
     const db = await openDB()
     const results = await db.all(`
         SELECT * FROM scores
+        WHERE total_score > 5000
         ORDER BY CAST(total_score AS REAL) / max_score DESC
         LIMIT 100
     `)
