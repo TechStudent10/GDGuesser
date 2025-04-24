@@ -195,7 +195,7 @@ bool ResultsPopup::setup(int score, LevelDate correctDate, LevelDate date) {
     endGameSpr->setScale(0.8f);
     auto endGameBtn = CCMenuItemExt::createSpriteExtra(endGameSpr, [](CCObject*) {
         auto& gm = GuessManager::get();
-        gm.endGame();
+        gm.endGame(false);
     });
     
     auto nextRoundMenu = CCMenu::create();

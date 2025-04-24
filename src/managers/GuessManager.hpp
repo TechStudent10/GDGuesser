@@ -96,7 +96,8 @@ public:
     GameOptions options;
 
     void startNewGame(GameOptions options);
-    void endGame();
+    void endGame(bool pendingGuess);
+    void applyPenalty(std::function<void()> callback);
     void submitGuess(LevelDate date, std::function<void(int score, LevelDate correctDate, LevelDate date)> callback);
 
     void syncScores();

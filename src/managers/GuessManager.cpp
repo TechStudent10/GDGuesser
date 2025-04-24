@@ -142,18 +142,34 @@ void GuessManager::startNewGame(GameOptions options) {
                     return;
                 }
 
-                if (this->realLevel && Mod::get()->getSettingValue<bool>("dont-save-levels")) {
-                    GameLevelManager::get()->deleteLevel(this->realLevel);
-                    this->realLevel = nullptr;
+                auto startGame = [this, levelIdRes, options, getAcc]() {
+                    if (this->realLevel && Mod::get()->getSettingValue<bool>("dont-save-levels")) {
+                        GameLevelManager::get()->deleteLevel(this->realLevel);
+                        this->realLevel = nullptr;
+                    }
+                    
+                    auto levelId = levelIdRes.unwrap();
+                    this->options = options;
+                    
+                    auto* glm = GameLevelManager::get();
+                    glm->m_levelManagerDelegate = this;
+                    glm->getOnlineLevels(GJSearchObject::create(SearchType::Search, std::to_string(levelId)));
+                    getAcc();
+                };
+                
+                if (json["gameExists"].asBool().unwrap()) {
+                    if (m_loadingOverlay) m_loadingOverlay->removeMe();
+                    createQuickPopup(
+                        "Exit Penalty",
+                        "Looks like you exited the game before making a guess.\n<cr>Your total accuracy has dropped.</c>",
+                    "Understood",
+                    nullptr,
+                    [startGame](auto, bool) {
+                        GuessManager::get().applyPenalty(startGame);
+                    });
+                } else {
+                    startGame();
                 }
-                
-                auto levelId = levelIdRes.unwrap();
-                this->options = options;
-                
-                auto* glm = GameLevelManager::get();
-                glm->m_levelManagerDelegate = this;
-                glm->getOnlineLevels(GJSearchObject::create(SearchType::Search, std::to_string(levelId)));
-                getAcc();
             } else if (e->isCancelled()) {
                 if (m_loadingOverlay) m_loadingOverlay->removeMe();
                 log::error("request cancelled");
@@ -264,7 +280,7 @@ void GuessManager::submitGuess(LevelDate date, std::function<void(int score, Lev
     m_listener.setFilter(req.post(fmt::format("{}/guess/{}-{}-{}", getServerUrl(), date.year, date.month, date.day)));
 }
 
-void GuessManager::endGame() {
+void GuessManager::endGame(bool pendingGuess) {
     auto doTheThing = [this]() {
 
         m_loadingOverlay = LoadingOverlayLayer::create();
@@ -302,16 +318,44 @@ void GuessManager::endGame() {
         m_listener.setFilter(req.post(fmt::format("{}/endGame", getServerUrl())));
     };
 
+    std::string warning = pendingGuess ? "\n(This round will <cr>count as a loss</c>!)" : "";
     createQuickPopup(
         "End Game?",
-        "Are you sure you want to <cr>end the game</c>?",
+        "Are you sure you want to <cr>end the game</c>?" + warning,
         "No", "Yes",
-        [this, doTheThing](auto, bool btn2) {
+        [this, doTheThing, pendingGuess](auto, bool btn2) {
             if (!btn2) return;
-
-            doTheThing();
+            if (pendingGuess) GuessManager::get().applyPenalty(doTheThing);
+            else doTheThing();
         }
     );
+}
+
+void GuessManager::applyPenalty(std::function<void()> callback) {
+    m_loadingOverlay = LoadingOverlayLayer::create();
+    m_loadingOverlay->addToScene();
+
+    m_listener.bind([this, callback] (web::WebTask::Event* e) {
+        if (web::WebResponse* res = e->getValue()) {
+            if (res->code() != 200 && res->code() != 404) {
+                log::error("error applying penalty; http code: {}, error: {}", res->code(), res->string().unwrapOr("unable to get error string"));
+                return;
+            }
+
+            if (m_loadingOverlay) m_loadingOverlay->removeMe();
+            m_loadingOverlay = nullptr;
+
+            callback();
+        } else if (e->isCancelled()) {
+            if (m_loadingOverlay) m_loadingOverlay->removeMe();
+            log::error("request cancelled");
+            if (m_loadingOverlay) m_loadingOverlay->removeMe();
+        }
+    });
+
+    auto req = web::WebRequest();
+    setupRequest(req, matjson::makeObject({}));
+    m_listener.setFilter(req.post(fmt::format("{}/penalty", getServerUrl())));
 }
 
 void GuessManager::getLeaderboard(std::function<void(std::vector<LeaderboardEntry>)> callback) {

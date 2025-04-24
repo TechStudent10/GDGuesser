@@ -199,10 +199,7 @@ router.post("/start-new-game", async (req, res) => {
         return
     }
 
-    if (Object.keys(games).includes(account_id)) {
-        res.status(400).send("game already in progress")
-        return
-    }
+    const gameExists = Object.keys(games).includes(String(account_id))
 
     const id = getRandomLevelId()
     games[account_id] = {
@@ -213,7 +210,8 @@ router.post("/start-new-game", async (req, res) => {
 
     res.json({
         level: id,
-        game: games[account_id]
+        game: games[account_id],
+        gameExists: gameExists
     })
 })
 
@@ -301,6 +299,78 @@ router.post("/guess/:date", async (req, res) => {
         score,
         correctDate: stringToLvlDate(correctDate)
     })
+})
+
+router.post("/penalty", async (req, res) => {
+    const token = req.headers.authorization || ""
+    const account_id = req.body["account_id"]
+    const daResp = await checkToken(token, account_id)
+
+    if (daResp.status !== 200) {
+        res.status(401).send(daResp.statusText)
+        return
+    }
+
+    const data = await daResp.json()
+    
+    if (!data["valid_weak"]) {
+        res.status(401).send(`Invalid token: ${data["cause"]}`)
+        return
+    }
+
+    if (!Object.keys(games).includes(String(account_id))) {
+        res.status(404).send("game does not exist. did you mean to call /start-new-game?")
+        return
+    }
+
+    const levelId = games[account_id].currentLevelId
+    const gameMode = games[account_id].options.mode
+    const max_score = gameMode === GameMode.Normal ? 500 : 600;
+
+    const score = 0
+    const accuracy = 0
+
+    const db = await openDB()
+    await db.run(`
+        INSERT INTO scores (
+            account_id,
+            username,
+            total_score,
+            icon_id,
+            accuracy,
+            max_score,
+            total_normal_guesses,
+            total_hardcore_guesses
+        )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT (account_id) DO
+            UPDATE SET
+                username = ?,
+                total_score = total_score + ?,
+                accuracy = (accuracy + ?) / 2,
+                max_score = max_score + ?,
+                total_normal_guesses = total_normal_guesses + ?,
+                total_hardcore_guesses = total_hardcore_guesses + ?;
+    `,
+        account_id,
+        data["username"],
+        score,
+        1,
+        accuracy,
+        max_score,
+        gameMode === GameMode.Normal ? 1 : 0,
+        gameMode === GameMode.Hardcore ? 1 : 0,
+        data["username"],
+        score,
+        accuracy,
+        max_score,
+        gameMode === GameMode.Normal ? 1 : 0,
+        gameMode === GameMode.Hardcore ? 1 : 0,
+    )
+
+    delete games[account_id]
+
+    res.status(200).send()
 })
 
 router.post("/endGame", async (req, res) => {

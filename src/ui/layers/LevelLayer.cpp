@@ -228,7 +228,7 @@ void LevelLayer::playStep4() {
 
 void LevelLayer::keyBackClicked() {
     auto& gm = GuessManager::get();
-    gm.endGame();
+    gm.endGame(true);
 }
 
 void LevelLayer::createLoadingSprite() {
