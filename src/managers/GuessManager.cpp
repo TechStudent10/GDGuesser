@@ -83,34 +83,35 @@ void GuessManager::startNewGame(GameOptions options) {
         updateStatusAndLoading(TaskStatus::GetScore);
         m_listener.bind([this] (web::WebTask::Event* e) {
             if (web::WebResponse* res = e->getValue()) {
-                if (loadingOverlay) loadingOverlay->removeMe();
-
+                
                 if (res->code() != 200) {
                     log::debug("received non-200 code: {}", res->code());
                     return;
                 }
-
+                
                 auto jsonRes = res->json();
                 if (jsonRes.isErr()) {
                     log::error("error getting account json: {}", jsonRes.err());
                     return;
                 }
-
+                
                 auto json = jsonRes.unwrap();
-
+                
                 auto scoreResult = json["total_score"].asInt();
                 if (scoreResult.isErr()) {
                     log::error("unable to get score");
                     return;
                 }
+
                 auto score = scoreResult.unwrap();
                 totalScore = score;
             } else if (e->isCancelled()) {
                 if (loadingOverlay) loadingOverlay->removeMe();
+                loadingOverlay = nullptr;
                 log::error("request cancelled");
             }
         });
-
+        
         auto req = web::WebRequest();
         auto gm = GameManager::get();
         setupRequest(req, matjson::makeObject({
@@ -160,8 +161,6 @@ void GuessManager::startNewGame(GameOptions options) {
                 
                 auto levelId = levelIdRes.unwrap();
                 this->options = options;
-
-                if (loadingOverlay) loadingOverlay->removeMe();
                 
                 auto* glm = GameLevelManager::get();
                 glm->m_levelManagerDelegate = this;
@@ -170,6 +169,7 @@ void GuessManager::startNewGame(GameOptions options) {
                 updateStatusAndLoading(TaskStatus::GetLevel);
             } else if (e->isCancelled()) {
                 if (loadingOverlay) loadingOverlay->removeMe();
+                loadingOverlay = nullptr;
                 log::error("request cancelled");
             }
         });
@@ -261,6 +261,8 @@ void GuessManager::submitGuess(LevelDate date, std::function<void(int score, Lev
             totalScore += score;
             
             if (loadingOverlay) loadingOverlay->removeMe();
+            loadingOverlay = nullptr;
+
             log::info("{}", static_cast<int>(json["correctDate"]["year"].asInt().unwrapOr(0)));
             callback(score, {
                 .year = static_cast<int>(json["correctDate"]["year"].asInt().unwrapOr(0)),
@@ -269,6 +271,7 @@ void GuessManager::submitGuess(LevelDate date, std::function<void(int score, Lev
             }, date);
         } else if (e->isCancelled()) {
             if (loadingOverlay) loadingOverlay->removeMe();
+            loadingOverlay = nullptr;
             log::error("request cancelled");
         }
     });
@@ -310,6 +313,7 @@ void GuessManager::endGame() {
                 CCDirector::sharedDirector()->pushScene(CCTransitionFade::create(.5f, scene));
             } else if (e->isCancelled()) {
                 if (loadingOverlay) loadingOverlay->removeMe();
+                loadingOverlay = nullptr;
                 log::error("request cancelled");
             }
         });

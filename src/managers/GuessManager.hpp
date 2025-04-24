@@ -79,7 +79,7 @@ public:
     // (using data copied from realLevel using GJGameLevel::copyLevelInfo)
     Ref<GJGameLevel> currentLevel;
     
-    LoadingOverlayLayer* loadingOverlay;
+    LoadingOverlayLayer* loadingOverlay = nullptr;
     TaskStatus taskStatus = TaskStatus::None;
     
     int totalScore = 0;
