@@ -73,13 +73,13 @@ protected:
 public:
     // real level downloaded from the servers
     // (used to handle stats conflicts)
-    Ref<GJGameLevel> realLevel = nullptr;
+    Ref<GJGameLevel> realLevel;
     
     // actual level being guessed
     // (using data copied from realLevel using GJGameLevel::copyLevelInfo)
-    Ref<GJGameLevel> currentLevel = nullptr;
+    Ref<GJGameLevel> currentLevel;
     
-    Ref<LoadingOverlayLayer> loadingOverlay = nullptr;
+    LoadingOverlayLayer* loadingOverlay = nullptr;
     TaskStatus taskStatus = TaskStatus::None;
     
     int totalScore = 0;

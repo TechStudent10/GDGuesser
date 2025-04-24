@@ -51,15 +51,14 @@ void LoadingOverlayLayer::updateStatus(TaskStatus status) {
     m_status = status;
 
     if (status != TaskStatus::None) {
-        m_statusLabel->setString(gm.statusToString(status).c_str());
-        m_statusLabel->setPosition(size.width * .5f, size.height * .5f + 22.f);
-        m_statusLabel->limitLabelWidth(175.f, .8f, .0f);
-        m_statusLabel->setVisible(true);
 
-        if (status == TaskStatus::Authenticate)
-            m_statusLabel->setAnchorPoint(ccp(.5f, .0f));
-        else
-            m_statusLabel->setAnchorPoint(ccp(.5f, .5f));
+    auto statusString = gm.statusToString(status);
+        
+    m_statusLabel->setAnchorPoint(ccp(.5f, .0f));
+    m_statusLabel->setString(statusString.c_str());
+    m_statusLabel->setPosition(size.width * .5f, size.height * .5f + 22.f);
+    m_statusLabel->limitLabelWidth(175.f, .8f, .0f);
+    m_statusLabel->setVisible(true);
 
         m_spinner->setPosition(size.width * .5f, size.height * .5f - 27.f);
     } else {

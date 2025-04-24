@@ -109,7 +109,7 @@ void GuessManager::startNewGame(GameOptions options) {
                         GameLevelManager::get()->deleteLevel(this->realLevel);
                         this->realLevel = nullptr;
                     }
-                    
+
                     auto levelId = levelIdRes.unwrap();
                     this->options = options;
                     
@@ -118,21 +118,23 @@ void GuessManager::startNewGame(GameOptions options) {
                     glm->getOnlineLevels(GJSearchObject::create(SearchType::Search, std::to_string(levelId)));
                     updateStatusAndLoading(TaskStatus::GetLevel);
                 };
-                
 
-                if (json["gameExists"].asBool().unwrap()) {
-                    safeRemoveLoadingLayer();
-                    createQuickPopup(
-                        "Exit Penalty",
-                        "Looks like you exited the game before making a guess.\n<cr>Your total accuracy has dropped.</c>",
-                    "OK",
-                    nullptr,
-                    [startGame](auto, bool) {
-                        GuessManager::get().applyPenalty(startGame);
-                    });
-                } else {
-                    startGame();
-                }
+                startGame();
+
+                // if (json["gameExists"].asBool().unwrapOr(false)) {
+                //     safeRemoveLoadingLayer();
+                    
+                //     createQuickPopup(
+                //         "Exit Penalty",
+                //         "Looks like you exited the game before making a guess.\n<cr>Your total accuracy has dropped.</c>",
+                //     "OK",
+                //     nullptr,
+                //     [this, startGame](auto, bool) {
+                //         this->applyPenalty(startGame);
+                //     });
+                // } else {
+                //     startGame();
+                // }
             } else if (e->isCancelled()) {
                 safeRemoveLoadingLayer();
                 log::error("request cancelled");
@@ -339,7 +341,7 @@ void GuessManager::endGame(bool pendingGuess) {
         "No", "Yes",
         [this, doTheThing, pendingGuess](auto, bool btn2) {
             if (!btn2) return;
-            if (pendingGuess) applyPenalty(doTheThing);
+            // if (pendingGuess) applyPenalty(doTheThing);
             else doTheThing();
         }
     );
@@ -351,16 +353,16 @@ void GuessManager::applyPenalty(std::function<void()> callback) {
     updateStatusAndLoading(TaskStatus::ApplyPenalty);
     m_listener.bind([this, callback] (web::WebTask::Event* e) {
         if (web::WebResponse* res = e->getValue()) {
+            safeRemoveLoadingLayer();
+
             if (res->code() != 200 && res->code() != 404) {
                 log::error("error applying penalty; http code: {}, error: {}", res->code(), res->string().unwrapOr("unable to get error string"));
                 return;
             }
 
-            safeRemoveLoadingLayer();
-
             callback();
         } else if (e->isCancelled()) {
-            if (loadingOverlay) loadingOverlay->removeMe();
+            safeRemoveLoadingLayer();
             log::error("request cancelled");
         }
     });
@@ -485,7 +487,6 @@ void GuessManager::levelDownloadFinished(GJGameLevel* level) {
     this->currentLevel->m_creatorName = "GDGuesser";
     auto levelDecoded = decodeBase64(this->currentLevel->m_levelString);
     this->currentLevel->m_levelString = encodeBase64(levelDecoded + "1,3854,2,-1000,3,1000,135,1;");
-    // auto layer = LevelInfoLayer::create(level, false);
     auto layer = LevelLayer::create();
     auto scene = CCScene::create();
     scene->addChild(layer);
