@@ -73,13 +73,13 @@ protected:
 public:
     // real level downloaded from the servers
     // (used to handle stats conflicts)
-    Ref<GJGameLevel> realLevel;
+    Ref<GJGameLevel> realLevel = nullptr;
     
     // actual level being guessed
     // (using data copied from realLevel using GJGameLevel::copyLevelInfo)
-    Ref<GJGameLevel> currentLevel;
+    Ref<GJGameLevel> currentLevel = nullptr;
     
-    LoadingOverlayLayer* loadingOverlay = nullptr;
+    Ref<LoadingOverlayLayer> loadingOverlay = nullptr;
     TaskStatus taskStatus = TaskStatus::None;
     
     int totalScore = 0;
@@ -93,6 +93,9 @@ public:
     
     void updateStatusAndLoading(TaskStatus status);
     void syncScores();
+
+    void safeRemoveLoadingLayer();
+    void safeAddLoadingLayer();
 
     void getLeaderboard(std::function<void(std::vector<LeaderboardEntry>)> callback);
     const std::string getServerUrl();

@@ -74,5 +74,6 @@ void LoadingOverlayLayer::addToScene() {
 
 void LoadingOverlayLayer::removeMe() {
     SceneManager::get()->forget(this);
-    this->removeFromParent();
+    this->removeFromParentAndCleanup(true);
+    GuessManager::get().loadingOverlay = nullptr;
 }
