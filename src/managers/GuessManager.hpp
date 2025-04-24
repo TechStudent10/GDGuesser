@@ -3,6 +3,7 @@
 #include <Geode/Geode.hpp>
 #include <Geode/utils/web.hpp>
 #include <ui/layers/LoadingOverlayLayer.hpp>
+#include "Enums.hpp"
 
 using namespace geode::prelude;
 
@@ -24,17 +25,6 @@ struct LeaderboardEntry {
     int max_score;
     int total_normal_guesses;
     int total_hardcore_guesses;
-};
-
-enum class DateFormat {
-    Normal,
-    American,
-    Backwards
-};
-
-enum class GameMode {
-    Normal,
-    Hardcore
 };
 
 struct GameOptions {
@@ -84,22 +74,24 @@ public:
     // real level downloaded from the servers
     // (used to handle stats conflicts)
     Ref<GJGameLevel> realLevel;
-
+    
     // actual level being guessed
     // (using data copied from realLevel using GJGameLevel::copyLevelInfo)
     Ref<GJGameLevel> currentLevel;
-
-    LoadingOverlayLayer* m_loadingOverlay;
-
+    
+    LoadingOverlayLayer* loadingOverlay = nullptr;
+    TaskStatus taskStatus = TaskStatus::None;
+    
     int totalScore = 0;
-
+    
     GameOptions options;
-
+    
     void startNewGame(GameOptions options);
     void endGame(bool pendingGuess);
     void applyPenalty(std::function<void()> callback);
     void submitGuess(LevelDate date, std::function<void(int score, LevelDate correctDate, LevelDate date)> callback);
-
+    
+    void updateStatusAndLoading(TaskStatus status);
     void syncScores();
 
     void getLeaderboard(std::function<void(std::vector<LeaderboardEntry>)> callback);
@@ -109,6 +101,8 @@ public:
     GJFeatureState getFeaturedState(GJGameLevel* level);
     std::string decodeBase64(const std::string& input);
     std::string encodeBase64(const std::string& input);
+
+    std::string statusToString(TaskStatus status);
 
     static GuessManager& get() {
         static GuessManager instance;
