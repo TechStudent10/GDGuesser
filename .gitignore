@@ -64,5 +64,3 @@ build-*/
 /cmake-build-*/
 
 /dashauth
-server/package-lock.json
-server/yarn.lock
