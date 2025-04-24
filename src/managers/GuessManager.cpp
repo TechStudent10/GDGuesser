@@ -172,7 +172,7 @@ void GuessManager::startNewGame(GameOptions options) {
                 
 
                 if (json["gameExists"].asBool().unwrap()) {
-                    if (m_loadingOverlay) m_loadingOverlay->removeMe();
+                    if (loadingOverlay) loadingOverlay->removeMe();
                     createQuickPopup(
                         "Exit Penalty",
                         "Looks like you exited the game before making a guess.\n<cr>Your total accuracy has dropped.</c>",
@@ -354,8 +354,10 @@ void GuessManager::endGame(bool pendingGuess) {
 }
 
 void GuessManager::applyPenalty(std::function<void()> callback) {
-    m_loadingOverlay = LoadingOverlayLayer::create();
-    m_loadingOverlay->addToScene();
+    if(!loadingOverlay) {
+        loadingOverlay = LoadingOverlayLayer::create();
+        loadingOverlay->addToScene();
+    }
 
     m_listener.bind([this, callback] (web::WebTask::Event* e) {
         if (web::WebResponse* res = e->getValue()) {
@@ -364,14 +366,14 @@ void GuessManager::applyPenalty(std::function<void()> callback) {
                 return;
             }
 
-            if (m_loadingOverlay) m_loadingOverlay->removeMe();
-            m_loadingOverlay = nullptr;
+            if (loadingOverlay) loadingOverlay->removeMe();
+                loadingOverlay = nullptr;
 
             callback();
         } else if (e->isCancelled()) {
-            if (m_loadingOverlay) m_loadingOverlay->removeMe();
+            if (loadingOverlay) loadingOverlay->removeMe();
             log::error("request cancelled");
-            if (m_loadingOverlay) m_loadingOverlay->removeMe();
+            if (loadingOverlay) loadingOverlay->removeMe();
         }
     });
 
