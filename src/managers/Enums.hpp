@@ -19,6 +19,5 @@ enum class TaskStatus {
     GetScore,
     GetLeaderboard,
     SubmitGuess,
-    ApplyPenalty,
     EndGame
 };

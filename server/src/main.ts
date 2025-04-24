@@ -212,6 +212,7 @@ async function submitScore(mode: GameMode, user: UserToken, score: number, accur
 
 router.get("/", (req, res) => {
     res.send("we are up and running! go get guessing!")
+    console.log(games)
 })
 
 router.post("/login", async (req, res) => {
@@ -270,6 +271,10 @@ router.post("/start-new-game", async (req, res) => {
     const account_id = data.user.account_id
     const gameExists = Object.keys(games).includes(String(account_id))
 
+    if (gameExists) {
+        submitScore(games[account_id].options.mode, data.user, 0, 0)
+    }
+
     const id = getRandomLevelId()
     games[account_id] = {
         accountId: account_id,
@@ -327,34 +332,6 @@ router.post("/guess/:date", async (req, res) => {
     })
 })
 
-router.post("/penalty", async (req, res) => {
-    const token = req.headers.authorization || ""
-    const data = await checkToken(token)
-    
-    if (!data.user) {
-        res.status(401).send(`Invalid token: ${data.error}`)
-        return
-    }
-
-    const account_id = data.user.account_id
-
-    if (!Object.keys(games).includes(String(account_id))) {
-        res.status(404).send("game does not exist. did you mean to call /start-new-game?")
-        return
-    }
-
-    const gameMode = games[account_id].options.mode
-
-    const score = 0
-    const accuracy = 0
-
-    submitScore(gameMode, data.user, score, accuracy)
-
-    delete games[account_id]
-
-    res.status(200).send()
-})
-
 router.post("/endGame", async (req, res) => {
     const token = req.headers.authorization || ""
     const data = await checkToken(token)
@@ -365,6 +342,11 @@ router.post("/endGame", async (req, res) => {
     }
 
     const account_id = data.user.account_id
+
+    const gameExists = Object.keys(games).includes(String(account_id))
+    if (gameExists) {
+        submitScore(games[account_id].options.mode, data.user, 0, 0)
+    }
 
     if (!Object.keys(games).includes(account_id.toString())) {
         res.status(404).send("game does not exist")
