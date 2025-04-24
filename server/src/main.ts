@@ -212,7 +212,6 @@ async function submitScore(mode: GameMode, user: UserToken, score: number, accur
 
 router.get("/", (req, res) => {
     res.send("we are up and running! go get guessing!")
-    console.log(games)
 })
 
 router.post("/login", async (req, res) => {
