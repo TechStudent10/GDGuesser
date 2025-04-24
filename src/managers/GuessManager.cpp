@@ -363,9 +363,12 @@ void GuessManager::endGame(bool pendingGuess) {
 }
 
 void GuessManager::applyPenalty(std::function<void()> callback) {
-    loadingOverlay = LoadingOverlayLayer::create();
-    loadingOverlay->addToScene();
+    if (!loadingOverlay) {
+        loadingOverlay = LoadingOverlayLayer::create();
+        loadingOverlay->addToScene();
+    }
 
+    updateStatusAndLoading(TaskStatus::ApplyPenalty);
     m_listener.bind([this, callback] (web::WebTask::Event* e) {
         if (web::WebResponse* res = e->getValue()) {
             if (res->code() != 200 && res->code() != 404) {
@@ -380,7 +383,6 @@ void GuessManager::applyPenalty(std::function<void()> callback) {
         } else if (e->isCancelled()) {
             if (loadingOverlay) loadingOverlay->removeMe();
             log::error("request cancelled");
-            if (loadingOverlay) loadingOverlay->removeMe();
         }
     });
 
@@ -576,6 +578,9 @@ std::string GuessManager::statusToString(TaskStatus status) {
 
         case TaskStatus::EndGame:
             return "Ending Game"; break;
+
+        case TaskStatus::ApplyPenalty:
+            return "Applying Penalty"; break;
         
         default:
             return "Unknown"; break;
