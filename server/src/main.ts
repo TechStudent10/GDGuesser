@@ -113,13 +113,9 @@ function calcScore(guess: LevelDate, correct: LevelDate, options: GameOptions): 
     const guessDate = new Date(guess.year, guess.month - 1, guess.day)
     const correctDate = new Date(correct.year, correct.month - 1, correct.day)
 
-    const diffDays = Math.ceil(Math.abs(guessDate.getTime() - correctDate.getTime()) / (1000 * 3600 * 24))
-    const score = Math.max(limit - diffDays, 0)
+    const diffDays = Math.abs(guessDate.getTime() - correctDate.getTime()) / (1000 * 3600 * 24)
+    const score = diffDays <= 7 ? limit : Math.max(limit - (diffDays - 7), 0)
     const accuracy = score / limit * 100
-
-    if (diffDays <= 7) {
-        return [limit, 100]
-    }
 
     return [score, accuracy]
 }
