@@ -2,85 +2,9 @@
 #include <ui/layers/LeaderboardLayer.hpp>
 #include <ui/layers/LoadingOverlayLayer.hpp>
 
-class DifficultySelectionPopup : public geode::Popup<GameOptions> {
-protected:
-    bool setup(GameOptions options) {
-        this->setTitle("Select Difficulty");
-
-        auto startGame = [this, options](GameMode mode) {
-            // this is so dumb
-            auto startGameFr = [this, options, mode]() {
-                auto& gm = GuessManager::get();
-                gm.startNewGame({
-                    .mode = mode,
-                    .versions = options.versions
-                });
-                this->onClose(nullptr);
-            };
-
-            if (options.versions.size() != 13) {
-                geode::createQuickPopup(
-                    "Warning",
-                    "Your scores will only be submitted if all versions are selected.\nYou can still play and get and get a score, though.",
-                    "Cancel", "Continue",
-                    [this, startGameFr](auto, bool btn2) {
-                        if (!btn2) {
-                            this->onClose(nullptr);
-                            return;
-                        }
-
-                        startGameFr();
-                    }
-                );
-            } else {
-                startGameFr();
-            }
-        };
-
-        auto normalBtn = CCMenuItemExt::createSpriteExtra(ButtonSprite::create("Normal"), [startGame](CCObject*) {
-            startGame(GameMode::Normal);
-        });
-
-        auto hardBtn = CCMenuItemExt::createSpriteExtra(ButtonSprite::create("Hardcore"), [startGame](CCObject*) {
-            startGame(GameMode::Hardcore);
-        });
-
-        auto menu = CCMenu::create();
-        menu->setLayout(
-            ColumnLayout::create()
-                ->setAxisReverse(true)
-        );
-
-        menu->addChild(normalBtn);
-        menu->addChild(hardBtn);
-
-        menu->updateLayout();
-
-        m_mainLayer->addChildAtPosition(menu, Anchor::Center);
-
-        auto infoBtn = InfoAlertButton::create("Info", "<cg>Normal mode</c> is the regular version of the game. You can see the level name, author, and difficulty. Scores submitted in this mode are out of 500.\n<cr>Hardcore mode</c> gives you nothing but the song name and level to go by. Scores submitted in this mode are out of 600.", .8f);
-        auto topRightMenu = CCMenu::create();
-        topRightMenu->addChild(infoBtn);
-
-        m_mainLayer->addChildAtPosition(topRightMenu, Anchor::TopRight, ccp(-20.f, -20.f));
-
-        return true;
-    }
-public:
-    static DifficultySelectionPopup* create(GameOptions options) {
-        auto ret = new DifficultySelectionPopup;
-        if (ret->initAnchored(280.f, 230.f, options)) {
-            ret->autorelease();
-            return ret;
-        }
-        delete ret;
-        return nullptr;
-    }
-};
-
 StartPopup* StartPopup::create() {
     auto ret = new StartPopup;
-    if (ret->initAnchored(300.f, 200.f)) {
+    if (ret->initAnchored(300.f, 250.f)) {
         ret->autorelease();
         return ret;
     }
@@ -91,12 +15,51 @@ StartPopup* StartPopup::create() {
 bool StartPopup::setup() {
     this->setTitle("GDGuesser");
 
-    auto btn = CCMenuItemExt::createSpriteExtra(ButtonSprite::create("Start!"), [this](CCObject*) {
-        DifficultySelectionPopup::create(options)->show();
+    auto playSprite = CCSprite::createWithSpriteFrameName("GJ_playBtn2_001.png");
+    playSprite->setScale(0.75f);
+    auto btn = CCMenuItemExt::createSpriteExtra(playSprite, [this](CCObject*) {
+        auto startGameFr = [this]() {
+            auto& gm = GuessManager::get();
+            gm.startNewGame({
+                .mode = options.mode,
+                .versions = options.versions
+            });
+        };
+        if (options.versions.size() != 13) {
+            geode::createQuickPopup(
+                "Warning",
+                "Your scores will only be submitted if all versions are selected.\nYou can still play and get and get a score, though.",
+                "Cancel", "Continue",
+                [this, startGameFr](auto, bool btn2) {
+                    if (!btn2) {
+                        this->onClose(nullptr);
+                        return;
+                    }
+
+                    startGameFr();
+                }
+            );
+        } else {
+            startGameFr();
+        }
     });
+    auto topRightMenu = CCMenu::create();
+    auto discordBtn = CCMenuItemExt::createSpriteExtraWithFrameName("gj_discordIcon_001.png", 1.f, [](CCObject*) {
+        CCApplication::get()->openURL(
+            Mod::get()->getMetadata().getLinks().getCommunityURL()->c_str()
+        );
+    });
+    auto infoBtn = InfoAlertButton::create("Info", "<cg>Normal mode</c> is the regular version of the game. You can see the level name, author, and difficulty. Scores submitted in this mode are out of 500.\n<cr>Hardcore mode</c> gives you nothing but the song name and level to go by. Scores submitted in this mode are out of 600.", .75f);
+    topRightMenu->addChild(infoBtn);
+    topRightMenu->addChild(discordBtn);
+    topRightMenu->setLayout(
+        ColumnLayout::create()
+            ->setAxisReverse(true)
+    );
+    m_mainLayer->addChildAtPosition(topRightMenu, Anchor::TopRight, ccp(-30.f, -40.f));
     auto startMenu = CCMenu::create();
     startMenu->addChild(btn);
-    m_mainLayer->addChildAtPosition(startMenu, Anchor::Center, ccp(0.f, 30.f));
+    m_mainLayer->addChildAtPosition(startMenu, Anchor::Center, ccp(0.f, 5.f));
 
     auto lbBtn = CCMenuItemExt::createSpriteExtraWithFrameName("GJ_levelLeaderboardBtn_001.png", .85f, [](CCObject*) {
         auto openLb = []() {
@@ -121,21 +84,83 @@ bool StartPopup::setup() {
         }
         openLb();
     });
-    auto discordBtn = CCMenuItemExt::createSpriteExtraWithFrameName("gj_discordIcon_001.png", 1.f, [](CCObject*) {
-        CCApplication::get()->openURL(
-            Mod::get()->getMetadata().getLinks().getCommunityURL()->c_str()
-        );
-    });
     auto lbMenu = CCMenu::create();
     lbMenu->addChild(lbBtn);
-    lbMenu->addChild(discordBtn);
-    lbMenu->setLayout(
-        ColumnLayout::create()
-            ->setAxisReverse(true)
-    );
-    m_mainLayer->addChildAtPosition(lbMenu, Anchor::TopRight, ccp(-30.f, -45.f));
+    m_mainLayer->addChildAtPosition(lbMenu, Anchor::Center, ccp(60.f, 5.f));
+
+    auto profileBtn = CCMenuItemExt::createSpriteExtraWithFrameName("GJ_profileButton_001.png", .75f, [](CCObject*) {
+        geode::createQuickPopup(
+            "Feature Doesn't Exist",
+            "If you are seeing this message then that means you are either a contributer that found this message or you are a user who is playing this version of the mod despite me telling the other contributers not to release this version of the mod.",
+            "OK", nullptr,
+            [](auto, bool) {}
+        );
+        //auto scene = CCScene::create();
+        //scene->addChild(layer);
+        //CCDirector::sharedDirector()->pushScene(CCTransitionFade::create(.5f, scene));
+    });
+    auto profileMenu = CCMenu::create();
+    profileMenu->addChild(profileBtn);
+    m_mainLayer->addChildAtPosition(profileMenu, Anchor::Center, ccp(-60.f, 5.f));
 
     auto versionsMenu = CCMenu::create();
+    auto difficultyMenu = CCMenu::create();
+
+    std::vector<CCMenuItemToggler*> difficultyButtons;
+
+    #define DIFFICULTY_BTN(selectedMode, sprite, labelText) \
+        { \
+            auto iconOn = CCScale9Sprite::createWithSpriteFrameName(sprite); \
+            auto iconOff = CCScale9Sprite::createWithSpriteFrameName(sprite); \
+            iconOff->setOpacity(255 * 0.5); \
+            \
+            auto label = CCLabelBMFont::create(labelText, "bigFont.fnt"); \
+            label->setScale(0.3f); \
+            \
+            auto labelCopy = CCLabelBMFont::create(labelText, "bigFont.fnt"); \
+            labelCopy->setScale(0.3f); \
+            \
+            auto containerOn = CCNode::create(); \
+            containerOn->setContentSize({30.f, 45.f}); \
+            iconOn->setPosition({containerOn->getContentSize().width / 2, containerOn->getContentSize().height / 2}); \
+            containerOn->addChild(iconOn); \
+            containerOn->addChildAtPosition(label, Anchor::Bottom, ccp(0.f, 0.f)); \
+            \
+            auto containerOff = CCNode::create(); \
+            containerOff->setContentSize({30.f, 45.f}); \
+            iconOff->setPosition({containerOff->getContentSize().width / 2, containerOff->getContentSize().height / 2}); \
+            containerOff->addChild(iconOff); \
+            containerOff->addChildAtPosition(labelCopy, Anchor::Bottom, ccp(0.f, 0.f)); \
+            \
+            auto difficultyBtn = CCMenuItemExt::createToggler(containerOn, containerOff, [this, difficultyMenu](CCMenuItemToggler* toggler) { \
+                if (options.mode == selectedMode) { \
+                    toggler->setClickable(false); \
+                    return; \
+                } \
+                \
+                for (auto child : CCArrayExt<CCMenuItemToggler*>(difficultyMenu->getChildren())) { \
+                    if (child != toggler) { \
+                        child->toggle(false); \
+                        child->setClickable(true); \
+                    } \
+                } \
+                options.mode = selectedMode; \
+            }); \
+            difficultyMenu->addChild(difficultyBtn); \
+            difficultyButtons.push_back(difficultyBtn); \
+        }
+
+    DIFFICULTY_BTN(GameMode::Normal, "diffIcon_01_btn_001.png", "Normal")
+    DIFFICULTY_BTN(GameMode::Hardcore, "diffIcon_05_btn_001.png", "Hardcore")
+    //DIFFICULTY_BTN(GameMode::Extreme, "diffIcon_10_btn_001.png", "Extreme")
+
+    #undef DIFFICULTY_BTN
+
+    if (!difficultyButtons.empty()) {
+        difficultyButtons[0]->toggle(true);
+        difficultyButtons[0]->setClickable(false);
+        options.mode = GameMode::Normal;
+    }
 
     #define VERSION_BTN(version_name) \
         { \
@@ -183,6 +208,14 @@ bool StartPopup::setup() {
     versionsMenu->setContentWidth(380.f);
     versionsMenu->updateLayout();
 
+    difficultyMenu->setLayout(
+        RowLayout::create()
+            ->setGrowCrossAxis(true)
+            ->setGap(24.f)
+    );
+    difficultyMenu->setContentWidth(380.f);
+    difficultyMenu->updateLayout();
+
     auto versionsContainer = CCScale9Sprite::create("square02b_001.png");
     versionsContainer->setContentSize({
         275.f,
@@ -200,6 +233,7 @@ bool StartPopup::setup() {
     versionsContainer->addChild(versionsMenu);
 
     m_mainLayer->addChildAtPosition(versionsContainer, Anchor::Bottom, ccp(0.f, 45.f));
+    m_mainLayer->addChildAtPosition(difficultyMenu, Anchor::Top, ccp(0.f, -55.f));
 
     auto versionsText = CCLabelBMFont::create("Versions", "goldFont.fnt");
     versionsText->setScale(.7f);
