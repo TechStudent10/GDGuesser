@@ -455,21 +455,21 @@ void GuessManager::levelDownloadFinished(GJGameLevel* level) {
     glm->m_levelDownloadDelegate = nullptr;
 
     reorderDownloadedLevel(level);
-
-    realLevel = level;
-
     safeRemoveLoadingLayer();
+
+    this->realLevel = level;
 
     this->currentLevel = GJGameLevel::create();
     this->currentLevel->copyLevelInfo(level);
+
     this->currentLevel->m_levelName = "???????";
     this->currentLevel->m_creatorName = "GDGuesser";
+    this->currentLevel->m_levelType = GJLevelType::Saved;
+
     auto levelDecoded = decodeBase64(this->currentLevel->m_levelString);
     this->currentLevel->m_levelString = encodeBase64(levelDecoded + "1,3854,2,-1000,3,1000,135,1;");
-    auto layer = LevelLayer::create();
-    auto scene = CCScene::create();
-    scene->addChild(layer);
-    CCDirector::sharedDirector()->pushScene(CCTransitionFade::create(.5f, scene));
+
+    CCDirector::sharedDirector()->pushScene(CCTransitionFade::create(.5f, LevelLayer::scene()));
 }
 
 
@@ -505,6 +505,8 @@ int GuessManager::getLevelDifficulty(GJGameLevel* level) {
         case GJDifficulty::Demon: return 6;
         default: return 0;
     }
+
+    return 0;
 }
 
 GJFeatureState GuessManager::getFeaturedState(GJGameLevel* level) {

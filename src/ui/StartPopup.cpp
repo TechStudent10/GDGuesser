@@ -5,7 +5,7 @@
 class DifficultySelectionPopup : public geode::Popup<GameOptions> {
 protected:
     bool setup(GameOptions options) {
-        this->setTitle("Select your difficulty!");
+        this->setTitle("Select Difficulty");
 
         auto startGame = [this, options](GameMode mode) {
             // this is so dumb
@@ -58,11 +58,11 @@ protected:
 
         m_mainLayer->addChildAtPosition(menu, Anchor::Center);
 
-        auto infoBtn = InfoAlertButton::create("Info", "<cg>Normal mode</c> is the regular version of the game. You can see the level name, author, and difficulty. Scores submitted in this mode are out of 500.\n<cr>Hardcore mode</c> gives you nothing but the song name and level to go by. Scores submitted in this mode are out of 600.", 1.f);
+        auto infoBtn = InfoAlertButton::create("Info", "<cg>Normal mode</c> is the regular version of the game. You can see the level name, author, and difficulty. Scores submitted in this mode are out of 500.\n<cr>Hardcore mode</c> gives you nothing but the song name and level to go by. Scores submitted in this mode are out of 600.", .8f);
         auto topRightMenu = CCMenu::create();
         topRightMenu->addChild(infoBtn);
 
-        m_mainLayer->addChildAtPosition(topRightMenu, Anchor::TopRight);
+        m_mainLayer->addChildAtPosition(topRightMenu, Anchor::TopRight, ccp(-20.f, -20.f));
 
         return true;
     }
@@ -140,7 +140,7 @@ bool StartPopup::setup() {
     #define VERSION_BTN(version_name) \
         { \
             auto versionTextOff = CCLabelBMFont::create(version_name, "bigFont.fnt"); \
-            versionTextOff->setOpacity(255 * 0.5); \
+            versionTextOff->setOpacity(255 * .5); \
             auto versionBtn = CCMenuItemExt::createToggler(CCLabelBMFont::create(version_name, "bigFont.fnt"), versionTextOff, [this](CCMenuItemToggler* toggler) { \
                 if (!toggler->isOn()) { \
                     if (std::find(options.versions.begin(), options.versions.end(), version_name) == options.versions.end()) { \
@@ -201,10 +201,10 @@ bool StartPopup::setup() {
 
     m_mainLayer->addChildAtPosition(versionsContainer, Anchor::Bottom, ccp(0.f, 45.f));
 
-    auto versionsText = CCLabelBMFont::create("Versions", "bigFont.fnt");
-    versionsText->setScale(0.5f);
+    auto versionsText = CCLabelBMFont::create("Versions", "goldFont.fnt");
+    versionsText->setScale(.7f);
 
-    m_mainLayer->addChildAtPosition(versionsText, Anchor::Bottom, ccp(0.f, 45.f + versionsContainer->getContentHeight() - 20.f));
+    m_mainLayer->addChildAtPosition(versionsText, Anchor::Bottom, ccp(0.f, 45.f + versionsContainer->getContentHeight() - 18.f));
 
     return true;
 }

@@ -11,6 +11,9 @@ NumberInput* NumberInput::create(std::string title, int max, int min, InputType 
 }
 
 bool NumberInput::init(std::string title, int max, int min, InputType type) {
+    if (!CCNode::init())
+        return false;
+
     m_max = max;
     m_min = min;
 
@@ -25,10 +28,14 @@ bool NumberInput::init(std::string title, int max, int min, InputType type) {
         default: break;
     }
 
+#ifdef GEODE_IS_ANDROID
+    maxChars++; // This fixes an issue where Android just deletes the last character
+#endif
+
     m_input = TextInput::create(50.f, placeholder);
     m_input->getInputNode()->m_numberInput = true;
     m_input->setFilter("1234567890");
-    if (maxChars != -1) m_input->setMaxCharCount(maxChars + 1); // DO NOT REMOVE THE + 1 OTHERWISE IT BREAKS ANDROID
+    if (maxChars > 0) m_input->setMaxCharCount(maxChars);
 
     auto topSpr = CCSprite::createWithSpriteFrameName("GJ_arrow_01_001.png");
     topSpr->setRotation(90);

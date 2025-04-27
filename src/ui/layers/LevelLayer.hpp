@@ -36,4 +36,5 @@ protected:
     CCScene* m_playScene = nullptr;
 public:
     static LevelLayer* create();
+    static CCScene* scene();
 };

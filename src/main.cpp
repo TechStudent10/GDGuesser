@@ -27,8 +27,10 @@ class $modify(MyCL, CreatorLayer) {
 };
 
 #ifdef DEBUG_BUILD
+
 #include <Geode/modify/MenuLayer.hpp>
-#include "ui/layers/LevelLayer.hpp"
+#include <ui/layers/LevelLayer.hpp>
+
 class $modify(MenuLayer) {
     bool init() {
         if (!MenuLayer::init())
@@ -48,8 +50,10 @@ class $modify(MenuLayer) {
             scene->addChild(LevelLayer::create());
             CCDirector::get()->replaceScene(CCTransitionFade::create(0.5f, scene));
         });
+        btn->setID("debug-btn"_spr);
     
         auto menu = CCMenu::create();
+        menu->setID("debug-menu"_spr);
 
         btn->setPosition(0.f, 100.f);
         menu->addChild(btn);

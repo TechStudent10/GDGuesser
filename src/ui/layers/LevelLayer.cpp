@@ -15,6 +15,13 @@ LevelLayer* LevelLayer::create() {
     return nullptr;
 }
 
+CCScene* LevelLayer::scene() {
+    auto scene = CCScene::create();
+    auto layer = LevelLayer::create();
+    scene->addChild(layer);
+    return scene;
+}
+
 bool LevelLayer::init() {
     if (!CCLayer::init())
         return false;

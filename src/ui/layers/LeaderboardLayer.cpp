@@ -6,6 +6,9 @@
 class UserCell : public CCNode {
 protected:
     bool init(LeaderboardEntry lbEntry, int index, float width) {
+        if (!CCNode::init())
+            return false;
+        
         auto nameLabel = CCLabelBMFont::create(lbEntry.username.c_str(), "goldFont.fnt");
         nameLabel->limitLabelWidth(150.f, 1.f, .0f);
         
@@ -141,7 +144,7 @@ bool GDGLeaderboardLayer::init() {
         listLayer->setAnchorPoint({ 0.5f, 0.5f });
         listLayer->setPosition({ size.width / 2, size.height / 2 - 20.f });
 
-        spinner->removeFromParent();
+        spinner->removeFromParentAndCleanup(true);
         this->addChild(listLayer);
     });
 

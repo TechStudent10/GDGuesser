@@ -39,6 +39,7 @@ bool ResultsPopup::setup(int score, LevelDate correctDate, LevelDate date) {
         default: {
             submittedDate = fmt::format("{:02d}/{:02d}/{:04d}", date.day, date.month, date.year);
             correctDateFormatted = fmt::format("{:02d}/{:02d}/{:04d}", correctDate.day, correctDate.month, correctDate.year);
+            break;
         }
     }
 
