@@ -39,6 +39,23 @@ const ID_CUTOFFS: {[key: string]: number[]} = {
     "2.2": [97454812, 130000000]
 }
 
+const VERSION_WEIGHTS: {[key: string]: number[]} = {
+    //[0] = Normal, [1] = whatever new difficulty you want to add (normal by default)
+    "1.0": [0.025],
+    "1.1": [0.025],
+    "1.2": [0.04],
+    "1.3": [0.045],
+    "1.4": [0.045],
+    "1.5": [0.065],
+    "1.6": [0.065],
+    "1.7": [0.075],
+    "1.8": [0.075],
+    "1.9": [0.12],
+    "2.0": [0.12, 0.0],
+    "2.1": [0.15, 0.27],
+    "2.2": [0.15]
+}
+
 const SECRET_KEY = process.env.SECRET_KEY || ""
 
 const levelIds = (() => {
@@ -124,12 +141,24 @@ function getRandomElement<T>(arr: Array<T>) {
     return arr[Math.floor((Math.random() * arr.length) % arr.length)]
 }
 
-const getRandomLevelId = (allowedVersions: string[]) => {
+const getRandomLevelId = (allowedVersions: string[], weightList: number) => {
     let versions = Object.keys(ID_CUTOFFS)
-    if (allowedVersions.length !== 0) {
-        versions = versions.filter((id) => allowedVersions.includes(id))
+    if (allowedVersions.length) {
+        versions = versions.filter(version => allowedVersions.includes(version))
     }
-    return getRandomElement(levelIds[getRandomElement(versions)])
+    const getWeight = (version: string) => {
+        const arr = VERSION_WEIGHTS[version] || []
+        return arr[weightList] ?? arr[0] ?? 0
+    }
+    const totalWeight = versions.reduce(
+        (sum, version) => sum + getWeight(version), 0
+    )
+    let random = Math.random() * totalWeight
+    const chosenVersion = versions.find(v => {
+      random -= getWeight(v)
+      return random <= 0
+    }) || versions[0]
+    return getRandomElement(levelIds[chosenVersion])
 }
 
 // function getDashAuthUrl() {
@@ -294,7 +323,13 @@ router.post("/start-new-game", async (req, res) => {
     }
 
     const options = req.body["options"] as GameOptions
-    const id = getRandomLevelId(options.versions)
+    let list: number;
+    switch(options.mode) {
+        case GameMode.Normal: list = 0; break;
+        case GameMode.Hardcore: list = 0; break;
+        default: list = 0;
+    }
+    const id = getRandomLevelId(options.versions, list)
     games[account_id] = {
         accountId: account_id,
         currentLevelId: id,
