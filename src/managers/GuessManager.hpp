@@ -120,6 +120,8 @@ public:
 
     std::string statusToString(TaskStatus status);
 
+    int dialogProgress = 0;
+
     static GuessManager& get() {
         static GuessManager instance;
         return instance; 

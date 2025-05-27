@@ -218,6 +218,7 @@ void GuessManager::startNewGame(GameOptions options) {
         auto res = argon::startAuth([this, getAcc](Result<std::string> res) {
             if (!res || res.isErr()) {
                 showError(fmt::format("Argon authentication error: {}", res.unwrapErr()));
+                safeRemoveLoadingLayer();
                 return;
             }
 
@@ -226,6 +227,7 @@ void GuessManager::startNewGame(GameOptions options) {
 
         if (!res) {
             showError(fmt::format("Argon authentication error: {}", res.unwrapErr()));
+            safeRemoveLoadingLayer();
         }
     };
 
@@ -340,7 +342,7 @@ void GuessManager::endGame(bool pendingGuess) {
         m_listener.setFilter(req.post(fmt::format("{}/endGame", getServerUrl())));
     };
 
-    std::string warning = pendingGuess ? "\n(This round will <cr>count as a loss</c>!)" : "";
+    std::string warning = pendingGuess && options.versions.size() == 13 ? "\n(This round will <cr>count as a loss</c>!)" : "";
     createQuickPopup(
         "End Game?",
         "Are you sure you want to <cr>end the game</c>?" + warning,

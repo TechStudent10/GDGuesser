@@ -318,7 +318,7 @@ router.post("/start-new-game", async (req, res) => {
     const account_id = data.user.account_id
     const gameExists = Object.keys(games).includes(String(account_id))
 
-    if (gameExists) {
+    if (gameExists && games[account_id].options.versions.length === Object.keys(ID_CUTOFFS).length) {
         submitScore(games[account_id].options.mode, data.user, 0, 0)
     }
 
@@ -403,7 +403,7 @@ router.post("/endGame", async (req, res) => {
     const account_id = data.user.account_id
 
     const gameExists = Object.keys(games).includes(String(account_id))
-    if (gameExists) {
+    if (gameExists && games[account_id].options.versions.length === Object.keys(ID_CUTOFFS).length) {
         submitScore(games[account_id].options.mode, data.user, 0, 0)
     }
 
