@@ -153,7 +153,7 @@ bool LevelLayer::init() {
     m_guessBtn->setPosition(buttonMenu->convertToNodeSpace(ccp(size.width * 0.5f, size.height * 0.5f - 26.f)));
     m_settingsBtn->setPosition(buttonMenu->convertToNodeSpace(ccp(30.f, 70.f)));
     m_infoBtn->setPosition(buttonMenu->convertToNodeSpace(ccp(30.f, 30.f)));
-    m_favouriteBtn->setPosition(buttonMenu->convertToNodeSpace(ccp(68.f, 30.f)));
+    m_favouriteBtn->setPosition(m_infoBtn->getPositionX() + 40.f, m_infoBtn->getPositionY());
 
     this->addChild(background, -5);
     this->addChild(buttonMenu);
