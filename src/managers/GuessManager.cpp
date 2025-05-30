@@ -389,6 +389,7 @@ std::vector<LeaderboardEntry> GuessManager::jsonToEntries(std::vector<matjson::V
             ENTRY_VALUE(max_score, int, asInt, 0),
             ENTRY_VALUE(total_normal_guesses, int, asInt, 0),
             ENTRY_VALUE(total_hardcore_guesses, int, asInt, 0),
+            ENTRY_VALUE(leaderboard_position, int, asInt, INT32_MAX), // INT32_MAX is so that I know if smth goes wrong
         });
 
         #undef ENTRY_VALUE

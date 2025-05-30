@@ -166,14 +166,13 @@ bool AccountPopup::setup(int accountID) {
             infoRow->addChild(item); \
         }
 
-        //UPDATE WHEN PLACE IS ADDED
-        if(user.icon_id == 1) { STAT("rankIcon_1_001.png", 1.f, std::to_string(user.icon_id).c_str()); } else
-        if(user.icon_id <= 3) { STAT("rankIcon_top10_001.png", 1.f, std::to_string(user.icon_id).c_str()); } else
-        if(user.icon_id <= 10) { STAT("rankIcon_top50_001.png", 1.f, std::to_string(user.icon_id).c_str()); } else
-        if(user.icon_id <= 25) { STAT("rankIcon_top500_001.png", 1.f, std::to_string(user.icon_id).c_str()); } else
-        if(user.icon_id <= 50) { STAT("rankIcon_top200_001.png", 1.f, std::to_string(user.icon_id).c_str()); } else
-        if(user.icon_id <= 100) { STAT("rankIcon_top1000_001.png", 1.f, std::to_string(user.icon_id).c_str()); } else
-        { STAT("rankIcon_all_001.png", 1.f, std::to_string(user.icon_id).c_str()); }
+        if(user.leaderboard_position == 1) { STAT("rankIcon_1_001.png", 1.f, std::to_string(user.leaderboard_position).c_str()); } else
+        if(user.leaderboard_position <= 3) { STAT("rankIcon_top10_001.png", 1.f, std::to_string(user.leaderboard_position).c_str()); } else
+        if(user.leaderboard_position <= 10) { STAT("rankIcon_top50_001.png", 1.f, std::to_string(user.leaderboard_position).c_str()); } else
+        if(user.leaderboard_position <= 25) { STAT("rankIcon_top500_001.png", 1.f, std::to_string(user.leaderboard_position).c_str()); } else
+        if(user.leaderboard_position <= 50) { STAT("rankIcon_top200_001.png", 1.f, std::to_string(user.leaderboard_position).c_str()); } else
+        if(user.leaderboard_position <= 100) { STAT("rankIcon_top1000_001.png", 1.f, std::to_string(user.leaderboard_position).c_str()); } else
+        { STAT("rankIcon_all_001.png", 1.f, std::to_string(user.leaderboard_position).c_str()); }
         STAT("diffIcon_01_btn_001.png", 0.5f, std::to_string(user.total_score).c_str());
         STAT("diffIcon_01_btn_001.png", 0.5f, fmt::format("{:.1f}%", (float)user.total_score / (float)user.max_score * 100.f).c_str());
 

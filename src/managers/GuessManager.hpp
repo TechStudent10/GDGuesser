@@ -25,6 +25,7 @@ struct LeaderboardEntry {
     int max_score;
     int total_normal_guesses;
     int total_hardcore_guesses;
+    int leaderboard_position;
 };
 
 struct GuessEntry {
