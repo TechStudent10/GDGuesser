@@ -105,7 +105,7 @@ protected:
         });
         viewBtn->setScale(0.6f);
         viewBtn->m_baseScale = 0.6f;
-        viewBtn->setPosition({ this->getContentSize().width - 30.f, infoGrid->getPositionY() });
+        viewBtn->setPosition({ this->getContentSize().width - 35.f, this->getContentSize().height / 2 });
 
         menu->addChild(viewBtn);
         this->addChild(menu);
