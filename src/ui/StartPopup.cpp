@@ -90,7 +90,20 @@ bool StartPopup::setup() {
     m_mainLayer->addChildAtPosition(lbMenu, Anchor::Center, ccp(60.f, 5.f));
 
     auto profileBtn = CCMenuItemExt::createSpriteExtraWithFrameName("GJ_profileButton_001.png", .75f, [](CCObject*) {
-        AccountPopup::create(GJAccountManager::get()->m_accountID)->show();
+        auto& gm = GuessManager::get();
+        gm.getAccount(GJAccountManager::get()->m_accountID, [](LeaderboardEntry user) {
+            if (user.account_id != 0) {
+                AccountPopup::create(user)->show();
+            } else {
+                CCArray* array = CCArray::create();
+                array->addObject(DialogObject::create("Scratch", "<cy>Play a game</c> of GDGuesser to create a profile!", 10, 1, false, {255, 255, 255}));
+                auto dl = DialogLayer::createDialogLayer(nullptr, array, 4);
+                dl->setZOrder(106);
+                dl->animateInRandomSide();
+                CCScene::get()->addChild(dl);
+            }
+        });
+        
     });
     auto profileMenu = CCMenu::create();
     profileMenu->addChild(profileBtn);

@@ -86,6 +86,7 @@ void GuessManager::showError(std::string error) {
 
 void GuessManager::startNewGame(GameOptions options) {
     auto doTheThing = [this, options]() {
+        auto optionsCopy = options;
         safeAddLoadingLayer();
         updateStatusAndLoading(TaskStatus::Start);        
         m_listener.bind([this, options] (web::WebTask::Event* e) {
@@ -136,7 +137,7 @@ void GuessManager::startNewGame(GameOptions options) {
                         "Looks like you exited the game before making a guess.\n<cr>Your total accuracy has dropped.</c>",
                     "OK",
                     nullptr,
-                    [startGame](auto, bool) {
+                    [startGame, options](auto, bool) {
                         startGame();
                     });
                 } else {
@@ -149,14 +150,14 @@ void GuessManager::startNewGame(GameOptions options) {
         });
 
         auto req = web::WebRequest();
-        setupRequest(req, matjson::makeObject({{"options", options}}));
+        setupRequest(req, matjson::makeObject({{"options", optionsCopy}}));
         m_listener.setFilter(req.post(fmt::format("{}/start-new-game", getServerUrl())));
     };
 
     // get total score
-    auto getAcc = [this, doTheThing](std::string argonToken) {
+    auto getAcc = [this, doTheThing, options](std::string argonToken) {
         // EventListener<web::WebTask> listener;
-        m_listener.bind([this, doTheThing] (web::WebTask::Event* e) {
+        m_listener.bind([this, doTheThing, options] (web::WebTask::Event* e) {
             if (web::WebResponse* res = e->getValue()) {
                 if (res->code() != 200) {
                     log::debug("received non-200 code: {}, {}", res->code(), res->string().unwrapOr("b"));
@@ -211,11 +212,11 @@ void GuessManager::startNewGame(GameOptions options) {
         m_listener.setFilter(req.post(fmt::format("{}/login", getServerUrl())));
     };
     
-    auto doAuthentication = [this, getAcc]() {
+    auto doAuthentication = [this, getAcc, options]() {
         safeAddLoadingLayer();
         
         updateStatusAndLoading(TaskStatus::Authenticate);
-        auto res = argon::startAuth([this, getAcc](Result<std::string> res) {
+        auto res = argon::startAuth([this, getAcc, options](Result<std::string> res) {
             if (!res || res.isErr()) {
                 showError(fmt::format("Argon authentication error: {}", res.unwrapErr()));
                 safeRemoveLoadingLayer();
@@ -435,8 +436,27 @@ void GuessManager::getAccount(int accountID, std::function<void(LeaderboardEntry
     updateStatusAndLoading(TaskStatus::LoadingAccount);
     m_listener.bind([this, callback] (web::WebTask::Event* e) {
         if (web::WebResponse* res = e->getValue()) {
-            if (res->code() != 200) {
+            if (res->code() != 200 && res->code() != 404) {
                 showError(fmt::format("error getting account; http code: {}, error: {}", res->code(), res->string().unwrapOr("unable to get error string")));
+                return;
+            }
+
+            if (res->code() == 404) {
+                LeaderboardEntry dummy {
+                    0,
+                    "Unknown",
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0.f,
+                    0,
+                    0,
+                    0,
+                    -1
+                };
+                callback(dummy);
                 return;
             }
 

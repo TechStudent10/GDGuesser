@@ -1,11 +1,12 @@
 #pragma once
 
 #include <Geode/Geode.hpp>
+#include <managers/GuessManager.hpp>
 using namespace geode::prelude;
 
-class AccountPopup : public geode::Popup<int> {
+class AccountPopup : public geode::Popup<LeaderboardEntry> {
 protected:
-    bool setup(int accountID);
+    bool setup(LeaderboardEntry user);
 public:
-    static AccountPopup* create(int accountID);
+    static AccountPopup* create(LeaderboardEntry user);
 };
