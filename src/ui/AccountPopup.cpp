@@ -42,12 +42,12 @@ protected:
         GLubyte red   = static_cast<GLubyte>((1.f - t) * 255);
         GLubyte green = static_cast<GLubyte>(t * 255);
         cocos2d::ccColor3B color = { red, green, 0 };
-        #define STAT(sprite, value, anchor) \
+        #define STAT(sprite, spriteScale, value, anchor) \
         { \
             auto item = CCNode::create(); \
             \
             auto icon = CCSprite::createWithSpriteFrameName(sprite); \
-            icon->setScale(0.35f); \
+            icon->setScale(spriteScale); \
             \
             auto label = CCLabelBMFont::create(value, "bigFont.fnt"); \
             label->setScale(0.3f); \
@@ -62,10 +62,10 @@ protected:
             infoGrid->addChildAtPosition(item, anchor, ccp(0.f, 0.f)); \
         }
 
-        STAT("diffIcon_01_btn_001.png", correctDateFormatted.c_str(), Anchor::TopLeft);
-        STAT("diffIcon_01_btn_001.png", std::to_string(guessEntry.score).c_str(), Anchor::TopRight);
-        STAT("diffIcon_01_btn_001.png", submittedDate.c_str(), Anchor::BottomLeft);
-        STAT("diffIcon_01_btn_001.png", fmt::format("{:.1f}%", (float)guessEntry.score / (float)maxScore * 100.f).c_str(), Anchor::BottomRight);
+        STAT("GJ_completesIcon_001.png", 0.4f, correctDateFormatted.c_str(), Anchor::TopLeft);
+        STAT("GJ_starsIcon_001.png", 0.5f, std::to_string(guessEntry.score).c_str(), Anchor::TopRight);
+        STAT("GJ_filterIcon_001.png", 0.4f, submittedDate.c_str(), Anchor::BottomLeft);
+        STAT("GJ_sTrendingIcon_001.png", 0.6f, fmt::format("{:.1f}%", (float)guessEntry.score / (float)maxScore * 100.f).c_str(), Anchor::BottomRight);
 
         #undef STAT
 
@@ -164,7 +164,7 @@ bool AccountPopup::setup(LeaderboardEntry user) {
 
     auto infoRow = CCNode::create();
     infoRow->setLayout(RowLayout::create()
-        ->setGap(8.f)
+        ->setGap(20.f)
         ->setAxisAlignment(AxisAlignment::Center)
     );
 
@@ -176,25 +176,25 @@ bool AccountPopup::setup(LeaderboardEntry user) {
         icon->setScale(spriteScale); \
         \
         auto label = CCLabelBMFont::create(value, "bigFont.fnt"); \
-        label->setScale(0.4f); \
+        label->setScale(0.5f); \
         label->setAnchorPoint({0.f, 0.4f}); \
         \
-        item->setContentSize({icon->getScaledContentSize().width + label->getScaledContentSize().width + 6.f, icon->getScaledContentSize().height}); \
+        item->setContentSize({icon->getScaledContentSize().width + label->getScaledContentSize().width + 4.f, icon->getScaledContentSize().height}); \
         item->addChildAtPosition(icon, Anchor::Left, ccp(icon->getScaledContentSize().width / 2, 0.f)); \
-        item->addChildAtPosition(label, Anchor::Left, ccp(icon->getScaledContentSize().width + 6.f, 0.f)); \
+        item->addChildAtPosition(label, Anchor::Left, ccp(icon->getScaledContentSize().width + 4.f, 0.f)); \
         \
         infoRow->addChild(item); \
     }
 
     if(user.leaderboard_position == 1) { STAT("rankIcon_1_001.png", 0.6f, std::to_string(user.leaderboard_position).c_str()); } else
-    if(user.leaderboard_position <= 3) { STAT("rankIcon_top10_001.png", 1.f, std::to_string(user.leaderboard_position).c_str()); } else
-    if(user.leaderboard_position <= 10) { STAT("rankIcon_top50_001.png", 1.f, std::to_string(user.leaderboard_position).c_str()); } else
-    if(user.leaderboard_position <= 25) { STAT("rankIcon_top500_001.png", 1.f, std::to_string(user.leaderboard_position).c_str()); } else
-    if(user.leaderboard_position <= 50) { STAT("rankIcon_top200_001.png", 1.f, std::to_string(user.leaderboard_position).c_str()); } else
-    if(user.leaderboard_position <= 100) { STAT("rankIcon_top1000_001.png", 1.f, std::to_string(user.leaderboard_position).c_str()); } else
+    if(user.leaderboard_position <= 3) { STAT("rankIcon_top10_001.png", 0.6f, std::to_string(user.leaderboard_position).c_str()); } else
+    if(user.leaderboard_position <= 10) { STAT("rankIcon_top50_001.png", 0.6f, std::to_string(user.leaderboard_position).c_str()); } else
+    if(user.leaderboard_position <= 25) { STAT("rankIcon_top500_001.png", 0.75f, std::to_string(user.leaderboard_position).c_str()); } else
+    if(user.leaderboard_position <= 50) { STAT("rankIcon_top200_001.png", 0.75f, std::to_string(user.leaderboard_position).c_str()); } else
+    if(user.leaderboard_position <= 100) { STAT("rankIcon_top1000_001.png", 0.85f, std::to_string(user.leaderboard_position).c_str()); } else
     { STAT("rankIcon_all_001.png", 1.f, std::to_string(user.leaderboard_position).c_str()); }
-    STAT("diffIcon_01_btn_001.png", 0.5f, std::to_string(user.total_score).c_str());
-    STAT("diffIcon_01_btn_001.png", 0.5f, fmt::format("{:.1f}%", (float)user.total_score / (float)user.max_score * 100.f).c_str());
+    STAT("GJ_starsIcon_001.png", 0.6f, std::to_string(user.total_score).c_str());
+    STAT("GJ_sTrendingIcon_001.png", 0.85f, fmt::format("{:.1f}%", (float)user.total_score / (float)user.max_score * 100.f).c_str());
 
     #undef STAT
 
