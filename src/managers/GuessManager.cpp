@@ -86,6 +86,7 @@ void GuessManager::showError(std::string error) {
 
 void GuessManager::startNewGame(GameOptions options) {
     auto doTheThing = [this, options]() {
+        auto optionsCopy = options;
         safeAddLoadingLayer();
         updateStatusAndLoading(TaskStatus::Start);        
         m_listener.bind([this, options] (web::WebTask::Event* e) {
@@ -136,7 +137,7 @@ void GuessManager::startNewGame(GameOptions options) {
                         "Looks like you exited the game before making a guess.\n<cr>Your total accuracy has dropped.</c>",
                     "OK",
                     nullptr,
-                    [startGame](auto, bool) {
+                    [startGame, options](auto, bool) {
                         startGame();
                     });
                 } else {
@@ -149,14 +150,14 @@ void GuessManager::startNewGame(GameOptions options) {
         });
 
         auto req = web::WebRequest();
-        setupRequest(req, matjson::makeObject({{"options", options}}));
+        setupRequest(req, matjson::makeObject({{"options", optionsCopy}}));
         m_listener.setFilter(req.post(fmt::format("{}/start-new-game", getServerUrl())));
     };
 
     // get total score
-    auto getAcc = [this, doTheThing](std::string argonToken) {
+    auto getAcc = [this, doTheThing, options](std::string argonToken) {
         // EventListener<web::WebTask> listener;
-        m_listener.bind([this, doTheThing] (web::WebTask::Event* e) {
+        m_listener.bind([this, doTheThing, options] (web::WebTask::Event* e) {
             if (web::WebResponse* res = e->getValue()) {
                 if (res->code() != 200) {
                     log::debug("received non-200 code: {}, {}", res->code(), res->string().unwrapOr("b"));
@@ -211,11 +212,11 @@ void GuessManager::startNewGame(GameOptions options) {
         m_listener.setFilter(req.post(fmt::format("{}/login", getServerUrl())));
     };
     
-    auto doAuthentication = [this, getAcc]() {
+    auto doAuthentication = [this, getAcc, options]() {
         safeAddLoadingLayer();
         
         updateStatusAndLoading(TaskStatus::Authenticate);
-        auto res = argon::startAuth([this, getAcc](Result<std::string> res) {
+        auto res = argon::startAuth([this, getAcc, options](Result<std::string> res) {
             if (!res || res.isErr()) {
                 showError(fmt::format("Argon authentication error: {}", res.unwrapErr()));
                 safeRemoveLoadingLayer();
@@ -370,6 +371,34 @@ void GuessManager::safeRemoveLoadingLayer() {
     }
 }
 
+std::vector<LeaderboardEntry> GuessManager::jsonToEntries(std::vector<matjson::Value> json) {
+    std::vector<LeaderboardEntry> entries = {};
+
+    for (auto lbEntry : json) {
+        #define ENTRY_VALUE(key, return_type, func, default) \
+            .key = static_cast<return_type>(lbEntry[#key].func().unwrapOr(default))
+        
+        entries.push_back({
+            ENTRY_VALUE(account_id, int, asInt, 0),
+            ENTRY_VALUE(username, std::string, asString, "Player"),
+            ENTRY_VALUE(total_score, int, asInt, 0),
+            ENTRY_VALUE(icon_id, int, asInt, 0),
+            ENTRY_VALUE(color1, int, asInt, 0),
+            ENTRY_VALUE(color2, int, asInt, 0),
+            ENTRY_VALUE(color3, int, asInt, 0),
+            ENTRY_VALUE(accuracy, float, asDouble, 0.f),
+            ENTRY_VALUE(max_score, int, asInt, 0),
+            ENTRY_VALUE(total_normal_guesses, int, asInt, 0),
+            ENTRY_VALUE(total_hardcore_guesses, int, asInt, 0),
+            ENTRY_VALUE(leaderboard_position, int, asInt, INT32_MAX), // INT32_MAX is so that I know if smth goes wrong
+        });
+
+        #undef ENTRY_VALUE
+    }
+
+    return entries;
+}
+
 void GuessManager::getLeaderboard(std::function<void(std::vector<LeaderboardEntry>)> callback) {
     updateStatusAndLoading(TaskStatus::GetLeaderboard);
     m_listener.bind([this, callback] (web::WebTask::Event* e) {
@@ -393,30 +422,7 @@ void GuessManager::getLeaderboard(std::function<void(std::vector<LeaderboardEntr
                 return;
             }
             auto leaderboardJson = lbResult.unwrap();
-            std::vector<LeaderboardEntry> entries = {};
-
-            for (auto lbEntry : leaderboardJson) {
-                #define ENTRY_VALUE(key, return_type, func, default) \
-                    .key = static_cast<return_type>(lbEntry[#key].func().unwrapOr(default))
-                
-                entries.push_back({
-                    ENTRY_VALUE(account_id, int, asInt, 0),
-                    ENTRY_VALUE(username, std::string, asString, "Player"),
-                    ENTRY_VALUE(total_score, int, asInt, 0),
-                    ENTRY_VALUE(icon_id, int, asInt, 0),
-                    ENTRY_VALUE(color1, int, asInt, 0),
-                    ENTRY_VALUE(color2, int, asInt, 0),
-                    ENTRY_VALUE(color3, int, asInt, 0),
-                    ENTRY_VALUE(accuracy, float, asDouble, 0.f),
-                    ENTRY_VALUE(max_score, int, asInt, 0),
-                    ENTRY_VALUE(total_normal_guesses, int, asInt, 0),
-                    ENTRY_VALUE(total_hardcore_guesses, int, asInt, 0),
-                });
-
-                #undef ENTRY_VALUE
-            }
-
-            callback(entries);
+            callback(jsonToEntries(leaderboardJson));
         } else if (e->isCancelled()) {
             showError("request cancelled");
         }
@@ -424,6 +430,51 @@ void GuessManager::getLeaderboard(std::function<void(std::vector<LeaderboardEntr
 
     auto req = web::WebRequest();
     m_listener.setFilter(req.get(fmt::format("{}/leaderboard", getServerUrl())));
+}
+
+void GuessManager::getAccount(int accountID, std::function<void(LeaderboardEntry)> callback) {
+    updateStatusAndLoading(TaskStatus::LoadingAccount);
+    m_listener.bind([this, callback] (web::WebTask::Event* e) {
+        if (web::WebResponse* res = e->getValue()) {
+            if (res->code() != 200 && res->code() != 404) {
+                showError(fmt::format("error getting account; http code: {}, error: {}", res->code(), res->string().unwrapOr("unable to get error string")));
+                return;
+            }
+
+            if (res->code() == 404) {
+                LeaderboardEntry dummy {
+                    0,
+                    "Unknown",
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0.f,
+                    0,
+                    0,
+                    0,
+                    -1
+                };
+                callback(dummy);
+                return;
+            }
+
+            auto jsonRes = res->json();
+            if (jsonRes.isErr()) {
+                showError(fmt::format("error getting json: {}", jsonRes.unwrapErr()));
+                return;
+            }
+
+            auto json = jsonRes.unwrap();
+            callback(jsonToEntries({ json })[0]);
+        } else if (e->isCancelled()) {
+            showError("request cancelled");
+        }
+    });
+
+    auto req = web::WebRequest();
+    m_listener.setFilter(req.get(fmt::format("{}/account/{}", getServerUrl(), accountID)));
 }
 
 void GuessManager::syncScores() {
@@ -557,9 +608,20 @@ std::string GuessManager::statusToString(TaskStatus status) {
         case TaskStatus::EndGame:
             return "Ending Game"; break;
 
+        case TaskStatus::LoadingAccount:
+            return "Loading Account"; break;
+
         default:
             return "Unknown"; break;
     }
 
     return "Unknown";
+}
+
+std::string GuessManager::formatDate(LevelDate date) {
+    switch (GuessManager::get().getDateFormat()) {
+        case DateFormat::American: return fmt::format("{:02d}/{:02d}/{:04d}", date.month, date.day, date.year); break;
+        case DateFormat::Backwards: return fmt::format("{:04d}/{:02d}/{:02d}", date.year, date.month, date.day); break;
+        default: return fmt::format("{:02d}/{:02d}/{:04d}", date.day, date.month, date.year);
+    }
 }

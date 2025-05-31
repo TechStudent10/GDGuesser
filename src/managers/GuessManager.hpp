@@ -25,6 +25,17 @@ struct LeaderboardEntry {
     int max_score;
     int total_normal_guesses;
     int total_hardcore_guesses;
+    int leaderboard_position;
+};
+
+struct GuessEntry {
+    int level_id;
+    GameMode mode;
+    int score;
+    LevelDate correct_date;
+    LevelDate guessed_date;
+    std::string level_name;
+    std::string level_creator;
 };
 
 struct GameOptions {
@@ -42,7 +53,6 @@ struct matjson::Serialize<GameOptions> {
 
         for (auto versionsVal : versionsArr) {
             versions.push_back(versionsVal.asString().unwrap());
-            log::info("added {} to hrihg, {}", versionsVal.asString().unwrap(), versions.size());
         }
 
         return geode::Ok(GameOptions { .mode = static_cast<GameMode>(mode), .versions = versions });
@@ -57,7 +67,7 @@ struct matjson::Serialize<GameOptions> {
 
 // gets and stores the current level,
 // as well as handles the game state.
-class GuessManager: public CCObject, public LevelDownloadDelegate, public LevelManagerDelegate {
+class GuessManager: public LevelDownloadDelegate, public LevelManagerDelegate {
 protected:
     GuessManager() {}
 
@@ -111,16 +121,20 @@ public:
     void showError(std::string error);
 
     void getLeaderboard(std::function<void(std::vector<LeaderboardEntry>)> callback);
+    void getAccount(int accountID, std::function<void(LeaderboardEntry)> callback);
+
     const std::string getServerUrl();
     DateFormat getDateFormat();
     int getLevelDifficulty(GJGameLevel* level);
     GJFeatureState getFeaturedState(GJGameLevel* level);
+
     std::string decodeBase64(const std::string& input);
     std::string encodeBase64(const std::string& input);
 
     std::string statusToString(TaskStatus status);
+    std::vector<LeaderboardEntry> jsonToEntries(std::vector<matjson::Value>);
 
-    int dialogProgress = 0;
+    std::string formatDate(LevelDate);
 
     static GuessManager& get() {
         static GuessManager instance;

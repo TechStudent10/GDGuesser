@@ -1,6 +1,7 @@
 #include "StartPopup.hpp"
 #include <ui/layers/LeaderboardLayer.hpp>
 #include <ui/layers/LoadingOverlayLayer.hpp>
+#include <ui/AccountPopup.hpp>
 
 StartPopup* StartPopup::create() {
     auto ret = new StartPopup;
@@ -90,27 +91,19 @@ bool StartPopup::setup() {
 
     auto profileBtn = CCMenuItemExt::createSpriteExtraWithFrameName("GJ_profileButton_001.png", .75f, [](CCObject*) {
         auto& gm = GuessManager::get();
-        CCArray* array = CCArray::create();
-        switch(gm.dialogProgress) {
-            case 0: array->addObject(DialogObject::create("Scratch", "The profile page <co>isn't ready</c> yet...", 10, 1, false, {255, 255, 255})); break;
-            case 1: array->addObject(DialogObject::create("Scratch", "Yep<d020>.<d020>.<d020>.<d060> Still <cl>not ready</c>...", 13, 1, false, {255, 255, 255})); break;
-            case 2: array->addObject(DialogObject::create("Scratch", "You tapping it more isn't going to magically make it finished, y'know...", 11, 1, false, {255, 255, 255})); break;
-            case 3: array->addObject(DialogObject::create("Scratch", "This isn't some type of secret menu,<d020> it's literally <cr><d030>un<d030>finished</c>.", 12, 1, false, {255, 255, 255})); break;
-            case 4: array->addObject(DialogObject::create("Scratch", "Tech should make that <cc>PR</c> already...", 13, 1, false, {255, 255, 255})); break;
-            case 5: array->addObject(DialogObject::create("Scratch", "y'know this dialog was only added so we could <cl>release this version</c> of the mod right?", 13, 1, false, {255, 255, 255})); break;
-            case 6:
-                array->addObject(DialogObject::create("Scratch", " <i050><s260><cr>I could crash your game right now!</c></s></i>", 14, 1, false, {255, 255, 255}));
-                array->addObject(DialogObject::create("Scratch", "But I wont<d020>.<d020>.<d020>.", 26, 1, false, {255, 255, 255}));
-                array->addObject(DialogObject::create("Scratch", "We're <d060><cy>featured</c><d030> now...", 12, 1, false, {255, 255, 255})); break;
-        }
-        if (gm.dialogProgress == 6) {gm.dialogProgress = 0;} else {gm.dialogProgress++;}
-        auto dl = DialogLayer::createDialogLayer(nullptr, array, 4);
-        dl->setZOrder(106);
-        dl->animateInRandomSide();
-        CCScene::get()->addChild(dl);
-        //auto scene = CCScene::create();
-        //scene->addChild(layer);
-        //CCDirector::sharedDirector()->pushScene(CCTransitionFade::create(.5f, scene));
+        gm.getAccount(GJAccountManager::get()->m_accountID, [](LeaderboardEntry user) {
+            if (user.account_id != 0) {
+                AccountPopup::create(user)->show();
+            } else {
+                CCArray* array = CCArray::create();
+                array->addObject(DialogObject::create("Scratch", "<cy>Play a game</c> of GDGuesser to create a profile!", 10, 1, false, {255, 255, 255}));
+                auto dl = DialogLayer::createDialogLayer(nullptr, array, 4);
+                dl->setZOrder(106);
+                dl->animateInRandomSide();
+                CCScene::get()->addChild(dl);
+            }
+        });
+        
     });
     auto profileMenu = CCMenu::create();
     profileMenu->addChild(profileBtn);

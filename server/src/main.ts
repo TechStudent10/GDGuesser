@@ -190,8 +190,11 @@ async function getUser(account_id: string | number) {
     const db = await openDB()
 
     const response = await db.get(`
-        SELECT * FROM scores
-        WHERE account_id = ?     
+        SELECT * FROM (
+            SELECT *, ROW_NUMBER() OVER (
+                ORDER BY (total_score * total_score) * 1.0 / max_score DESC
+            ) AS leaderboard_position FROM scores
+        ) ranked WHERE account_id = ?;
     `, account_id)
 
     if (!response) {
@@ -295,7 +298,7 @@ router.post("/login", async (req, res) => {
     )
 
     const tokenInfo: UserToken = {
-        account_id: account_id,
+        account_id,
         username: data["username"]
     }
     const jwtToken = jwt.sign(tokenInfo, SECRET_KEY)
@@ -433,8 +436,12 @@ router.get("/account/:id", async (req, res) => {
 router.get("/leaderboard", async (req, res) => {
     const db = await openDB()
     const results = await db.all(`
-        SELECT * FROM scores
-        WHERE total_score > 2500
+        SELECT * FROM (
+            SELECT *, ROW_NUMBER() OVER (
+                ORDER BY (total_score * total_score) * 1.0 / max_score DESC
+            ) AS leaderboard_position FROM scores
+        ) ranked
+        WHERE total_score >= 2500
         ORDER BY (total_score * total_score) * 1.0 / max_score DESC
         LIMIT 100
     `)
