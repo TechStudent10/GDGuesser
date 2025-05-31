@@ -20,32 +20,13 @@ bool ResultsPopup::setup(int score, LevelDate correctDate, LevelDate date) {
 
     m_closeBtn->removeFromParent();
 
-    std::string submittedDate = "";
-    std::string correctDateFormatted = "";
-
-    switch (gm.getDateFormat()) {
-        case DateFormat::American: {
-            submittedDate = fmt::format("{:02d}/{:02d}/{:04d}", date.month, date.day, date.year);
-            correctDateFormatted = fmt::format("{:02d}/{:02d}/{:04d}", correctDate.month, correctDate.day, correctDate.year);
-            break;
-        }
-        
-        case DateFormat::Backwards: {        
-            submittedDate = fmt::format("{:04d}/{:02d}/{:02d}", date.year, date.month, date.day);
-            correctDateFormatted = fmt::format("{:04d}/{:02d}/{:02d}", correctDate.year, correctDate.month, correctDate.day);
-            break;
-        }
-        
-        default: {
-            submittedDate = fmt::format("{:02d}/{:02d}/{:04d}", date.day, date.month, date.year);
-            correctDateFormatted = fmt::format("{:02d}/{:02d}/{:04d}", correctDate.day, correctDate.month, correctDate.year);
-            break;
-        }
-    }
+    std::string submittedDate = gm.formatDate(date);
+    std::string correctDateFormatted = gm.formatDate(correctDate);
 
     auto resultBg = cocos2d::extension::CCScale9Sprite::create("square02b_001.png", { 0.0f, 0.0f, 80.0f, 80.0f });
     resultBg->setContentSize({340,148});
-    resultBg->setColor({123,60,31});
+    resultBg->setColor(ccc3(0,0,0));
+    resultBg->setOpacity(75);
     m_mainLayer->addChildAtPosition(resultBg, Anchor::Center, ccp(0.f, 0.f));
     resultBg->setID("result-info-background");
 
