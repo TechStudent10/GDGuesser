@@ -42,29 +42,36 @@ protected:
         GLubyte red   = static_cast<GLubyte>((1.f - t) * 255);
         GLubyte green = static_cast<GLubyte>(t * 255);
         cocos2d::ccColor3B color = { red, green, 0 };
-        #define STAT(sprite, spriteScale, value, anchor) \
+        
+        #define STAT_RAW(node, value, anchor) \
         { \
             auto item = CCNode::create(); \
-            \
-            auto icon = CCSprite::createWithSpriteFrameName(sprite); \
-            icon->setScale(spriteScale); \
-            \
             auto label = CCLabelBMFont::create(value, "bigFont.fnt"); \
             label->setScale(0.3f); \
             label->setAnchorPoint({0.f, 0.4f}); \
             if(anchor == Anchor::TopRight || anchor == Anchor::BottomRight) label->setColor(color); \
             \
-            item->setContentSize({icon->getScaledContentSize().width + label->getScaledContentSize().width + 4.f, icon->getScaledContentSize().height}); \
-            item->addChildAtPosition(icon, Anchor::Left, ccp(icon->getScaledContentSize().width / 2, 0.f)); \
-            item->addChildAtPosition(label, Anchor::Left, ccp(icon->getScaledContentSize().width + 4.f, 0.f)); \
+            item->setContentSize({node->getScaledContentSize().width + label->getScaledContentSize().width + 4.f, node->getScaledContentSize().height}); \
+            item->addChildAtPosition(node, Anchor::Left, ccp(node->getScaledContentSize().width / 2, 0.f)); \
+            item->addChildAtPosition(label, Anchor::Left, ccp(node->getScaledContentSize().width + 4.f, 0.f)); \
             \
             item->setAnchorPoint({0.f, 0.5f}); \
             infoGrid->addChildAtPosition(item, anchor, ccp(0.f, 0.f)); \
         }
+        
+        #define STAT(sprite, spriteScale, value, anchor) \
+        { \
+            auto icon = CCSprite::createWithSpriteFrameName(sprite); \
+            icon->setScale(spriteScale); \
+            \
+            STAT_RAW(icon, value, anchor); \
+        }
 
         STAT("GJ_completesIcon_001.png", 0.4f, correctDateFormatted.c_str(), Anchor::TopLeft);
         STAT("GJ_starsIcon_001.png", 0.5f, std::to_string(guessEntry.score).c_str(), Anchor::TopRight);
-        STAT("GJ_filterIcon_001.png", 0.4f, submittedDate.c_str(), Anchor::BottomLeft);
+        auto guessIcon = CCLabelBMFont::create("?", "bigFont.fnt");
+        guessIcon->setScale(0.4f);
+        STAT_RAW(guessIcon, submittedDate.c_str(), Anchor::BottomLeft);
         STAT("GJ_sTrendingIcon_001.png", 0.6f, fmt::format("{:.1f}%", (float)guessEntry.score / (float)maxScore * 100.f).c_str(), Anchor::BottomRight);
 
         #undef STAT
@@ -79,28 +86,29 @@ protected:
         authorLabel->setPosition(nameLabel->getPositionX() + nameLabel->getScaledContentWidth() + 5.f, nameLabel->getPositionY());
         this->addChild(authorLabel);
 
-        auto level = GameLevelManager::get()->getSavedLevel(guessEntry.level_id);
+        auto menu = CCMenu::create();
+        menu->setPosition(ccp(0.f, -5.f));
+        menu->setContentSize(this->getContentSize());
+        menu->setAnchorPoint({ 0.f, 0.f });
+        menu->ignoreAnchorPointForPosition(false);
 
-        if (level) {
-            auto menu = CCMenu::create();
-            menu->setPosition(CCPointZero);
-            menu->setContentSize(this->getContentSize());
-            menu->setAnchorPoint({ 0.f, 0.f });
-            menu->ignoreAnchorPointForPosition(false);
+        auto viewBtn = CCMenuItemExt::createSpriteExtra(ButtonSprite::create("View"), [guessEntry](CCObject*) {
+            auto layer = LevelBrowserLayer::create(
+                GJSearchObject::create(
+                    SearchType::Search,
+                    std::to_string(guessEntry.level_id)
+                )
+            );
+            auto scene = CCScene::create();
+            scene->addChild(layer);
+            CCDirector::sharedDirector()->pushScene(CCTransitionFade::create(.5f, scene));
+        });
+        viewBtn->setScale(0.6f);
+        viewBtn->m_baseScale = 0.6f;
+        viewBtn->setPosition({ this->getContentSize().width - 30.f, infoGrid->getPositionY() });
 
-            auto viewBtn = CCMenuItemExt::createSpriteExtra(ButtonSprite::create("View"), [level](CCObject*) {
-                auto layer = LevelInfoLayer::create(level, false);
-                auto scene = CCScene::create();
-                scene->addChild(layer);
-                CCDirector::sharedDirector()->pushScene(CCTransitionFade::create(.5f, scene));
-            });
-            viewBtn->setScale(0.6f);
-            viewBtn->m_baseScale = 0.6f;
-            viewBtn->setPosition({ this->getContentSize().width - 30.f, infoGrid->getPositionY() });
-
-            menu->addChild(viewBtn);
-            this->addChild(menu);
-        }
+        menu->addChild(viewBtn);
+        this->addChild(menu);
         
         this->setAnchorPoint({ 0.f, 0.5f });
 
@@ -132,6 +140,8 @@ AccountPopup* AccountPopup::create(LeaderboardEntry user) {
 }
 
 bool AccountPopup::setup(LeaderboardEntry user) {
+    this->user = user;
+
     auto username = CCNode::create();
     auto player = SimplePlayer::create(0);
     auto gm = GameManager::get();
@@ -150,8 +160,18 @@ bool AccountPopup::setup(LeaderboardEntry user) {
     auto theB = CCLabelBMFont::create(user.username.c_str(), "bigFont.fnt");
     theB->limitLabelWidth(150.f, 0.75f, 0.0f);
     theB->setAnchorPoint({1.f, 0.5f});
-    username->setContentSize({theB->getScaledContentWidth() + 20.f, theB->getScaledContentHeight()});
-    username->addChildAtPosition(theB, Anchor::Right);
+    auto nameBtn = CCMenuItemExt::createSpriteExtra(theB, [user](CCObject*) {
+        bool myself = user.account_id == GJAccountManager::get()->m_accountID;
+        ProfilePage::create(user.account_id, myself)->show();
+    });
+    auto nameMenu = CCMenu::create();
+    nameMenu->setContentSize(nameBtn->getContentSize());
+    nameMenu->setAnchorPoint({ 1.f, 0.5f });
+    nameMenu->ignoreAnchorPointForPosition(false);
+    nameBtn->ignoreAnchorPointForPosition(true);
+    nameMenu->addChild(nameBtn);
+    username->setContentSize({nameMenu->getScaledContentWidth() + 20.f, nameMenu->getScaledContentHeight()});
+    username->addChildAtPosition(nameMenu, Anchor::Right);
     username->addChildAtPosition(player, Anchor::Left);
     username->setAnchorPoint({0.5f, 0.5f});
     m_mainLayer->addChildAtPosition(username, Anchor::Top, ccp(0.f, -20.f));
@@ -239,54 +259,71 @@ bool AccountPopup::setup(LeaderboardEntry user) {
     difficultyRow->setAnchorPoint({0.5f, 0.5f});
     m_mainLayer->addChildAtPosition(difficultyRow, Anchor::Center, ccp(0.f, 35.f));
 
-    auto historyItems = CCArray::create();
-    GuessEntry item = {
-        56143453,
-        GameMode::Normal,
-        350,
-        {2020, 10, 10},
-        {2021, 5, 15},
-        "Skibidi",
-        "Toilet"
-    };
-    GuessEntry item2 = {
-        66318856,
-        GameMode::Hardcore,
-        500,
-        {2020, 10, 10},
-        {2021, 5, 15},
-        "Dot Hog",
-        "Toilet"
-    };
-    GuessEntry item3 = {
-        10565740,
-        GameMode::Normal,
-        0,
-        {2020, 10, 10},
-        {2021, 5, 15},
-        "Bloodbath",
-        "Toilet"
-    };
-    auto cell = HistoryCell::create(item, 1, 240.f);
-    auto cell2 = HistoryCell::create(item2, 1, 240.f);
-    auto cell3 = HistoryCell::create(item3, 1, 240.f);
-    historyItems->addObject(cell);
-    historyItems->addObject(cell2);
-    historyItems->addObject(cell3);
+    auto backSpr = CCSprite::createWithSpriteFrameName("GJ_arrow_01_001.png");
+    backSpr->setScale(0.6f);
+    backBtn = CCMenuItemExt::createSpriteExtra(backSpr, [this](CCObject*) {
+        current_page -= 1;
+        getGuesses();
+    });
+    backBtn->setID("back-btn");
 
-    auto historyBg = ListView::create(historyItems, 45.f, 240.f, 100.f);
-    historyBg->setContentSize({240, 120});
-    auto border = geode::Border::create(historyBg, {0,0,0,75}, {240.f, 100.f});
-    //yoinked from creationRotation
-    if(CCScale9Sprite* borderSprite = typeinfo_cast<CCScale9Sprite*>(border->getChildByID("geode.loader/border_sprite"))) {
-        float scaleFactor = 1.7f;
-        borderSprite->setContentSize(CCSize{borderSprite->getContentSize().width, borderSprite->getContentSize().height + 3} / scaleFactor);
-        borderSprite->setScale(scaleFactor);
-        borderSprite->setPositionY(-1);
-    }
-    border->ignoreAnchorPointForPosition(false);
-    m_mainLayer->addChildAtPosition(border, Anchor::Center, ccp(0.f, -60.f));
-    border->setID("history-list-background");
+    auto nextSpr = CCSprite::createWithSpriteFrameName("GJ_arrow_01_001.png");
+    nextSpr->setFlipX(true);
+    nextSpr->setScale(0.6f);
+    nextBtn = CCMenuItemExt::createSpriteExtra(nextSpr, [this](CCObject*) {
+        current_page += 1;
+        getGuesses();
+    });
+    nextBtn->setID("next-btn");
+
+    auto backMenu = CCMenu::create();
+    backMenu->addChild(backBtn);
+    m_mainLayer->addChildAtPosition(backMenu, Anchor::Center, ccp(-135.f, -60.f));
+
+    auto nextMenu = CCMenu::create();
+    nextMenu->addChild(nextBtn);
+    m_mainLayer->addChildAtPosition(nextMenu, Anchor::Center, ccp(135.f, -60.f));
+
+    getGuesses();
 
     return true;
+}
+
+void AccountPopup::getGuesses() {
+    backBtn->setVisible(false);
+    nextBtn->setVisible(false);
+
+    if (guessList != nullptr) {
+        guessList->removeFromParent();
+    }
+
+    auto& gm = GuessManager::get();
+    gm.getGuesses(user.account_id, [this](GuessesResponse res) {
+        auto historyItems = CCArray::create();
+
+        for (auto entry : res.entries) {
+            historyItems->addObject(
+                HistoryCell::create(entry, 1, 240.f)
+            );
+        }
+
+        auto historyBg = ListView::create(historyItems, 45.f, 240.f, 100.f);
+        historyBg->setContentSize({240, 120});
+        guessList = Border::create(historyBg, {0,0,0,75}, {240.f, 100.f});
+        //yoinked from creationRotation
+        if(CCScale9Sprite* borderSprite = typeinfo_cast<CCScale9Sprite*>(guessList->getChildByID("geode.loader/border_sprite"))) {
+            float scaleFactor = 1.7f;
+            borderSprite->setContentSize(CCSize{borderSprite->getContentSize().width, borderSprite->getContentSize().height + 3} / scaleFactor);
+            borderSprite->setScale(scaleFactor);
+            borderSprite->setPositionY(-1);
+        }
+        guessList->ignoreAnchorPointForPosition(false);
+        m_mainLayer->addChildAtPosition(guessList, Anchor::Center, ccp(0.f, -60.f));
+        guessList->setID("history-list-background");
+
+        nextBtn->setVisible(res.page + 1 < res.total_pages);
+        backBtn->setVisible(res.page >= 1);
+
+        current_page = res.page;
+    }, current_page);
 }

@@ -204,7 +204,18 @@ async function getUser(account_id: string | number) {
     return response
 }
 
-async function submitScore(mode: GameMode, user: UserToken, score: number, accuracy: number) {
+async function submitScore(
+    mode: GameMode,
+    user: UserToken,
+    guess_history: boolean,
+    accuracy: number,
+    score?: number,
+    correct_date?: string,
+    guessed_date?: string,
+    level_id?: number,
+    level_name?: string,
+    level_creator?: string,
+) {
     const max_score = mode === GameMode.Normal ? 500 : 600;
 
     const db = await openDB()
@@ -244,6 +255,21 @@ async function submitScore(mode: GameMode, user: UserToken, score: number, accur
         mode === GameMode.Normal ? 1 : 0,
         mode === GameMode.Hardcore ? 1 : 0,   
     )
+
+    if (guess_history) {
+        await db.run(`
+            INSERT INTO guesses (
+                account_id,
+                level_id,
+                score,
+                mode,
+                correct_date,
+                guessed_date,
+                level_name,
+                level_creator
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `, user.account_id, level_id, score, mode, correct_date, guessed_date, level_name, level_creator)
+    }
 }
 
 router.get("/", (req, res) => {
@@ -322,7 +348,7 @@ router.post("/start-new-game", async (req, res) => {
     const gameExists = Object.keys(games).includes(String(account_id))
 
     if (gameExists && games[account_id].options.versions.length === Object.keys(ID_CUTOFFS).length) {
-        submitScore(games[account_id].options.mode, data.user, 0, 0)
+        submitScore(games[account_id].options.mode, data.user, false, 0, 0)
     }
 
     const options = req.body["options"] as GameOptions
@@ -374,7 +400,8 @@ router.post("/guess/:date", async (req, res) => {
     )["approx"]["estimation"]
     .split("T")[0]
     
-    
+    const levelInfo = await (await fetch(`https://history.geometrydash.eu/api/v1/level/${levelId}`)).json()
+
     const scoreResult = calcScore(stringToLvlDate(date), stringToLvlDate(correctDate), games[account_id].options)
     const score = scoreResult[0]
     const accuracy = scoreResult[1]
@@ -383,7 +410,7 @@ router.post("/guess/:date", async (req, res) => {
     
     // only submit if all versions are selected
     if (games[account_id].options.versions.length === Object.keys(ID_CUTOFFS).length) {
-        submitScore(gameMode, data.user, score, accuracy)
+        submitScore(gameMode, data.user, true, accuracy, score, correctDate, date, levelId, levelInfo["cache_level_name"], levelInfo["cache_username"])
     }
 
     delete games[account_id]
@@ -407,7 +434,7 @@ router.post("/endGame", async (req, res) => {
 
     const gameExists = Object.keys(games).includes(String(account_id))
     if (gameExists && games[account_id].options.versions.length === Object.keys(ID_CUTOFFS).length) {
-        submitScore(games[account_id].options.mode, data.user, 0, 0)
+        submitScore(games[account_id].options.mode, data.user, false, 0, 0)
     }
 
     if (!Object.keys(games).includes(account_id.toString())) {
@@ -431,6 +458,24 @@ router.get("/account/:id", async (req, res) => {
     res.json(
         response
     )
+})
+
+router.get("/guesses/:account_id", async (req, res) => {
+    const page = parseInt(req.query.page?.toString() || "0")
+    const per_page = 10
+
+    const db = await openDB()
+    const results = await db.all(`
+        SELECT * FROM guesses WHERE account_id = ? LIMIT ${per_page} OFFSET ${page * per_page}
+    `, req.params.account_id)
+
+    const total_pages = (await db.get("SELECT COUNT(*) AS pages FROM guesses WHERE account_id = ?", req.params.account_id))["pages"] / per_page
+
+    res.json({
+        guesses: results,
+        page,
+        total_pages: total_pages === 0 ? 1 : Math.ceil(total_pages)
+    })
 })
 
 router.get("/leaderboard", async (req, res) => {

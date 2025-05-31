@@ -56,7 +56,6 @@ const std::string GuessManager::getServerUrl() {
 
 DateFormat GuessManager::getDateFormat() {
     auto str = Mod::get()->getSettingValue<std::string>("date-format");
-    log::debug("str: {}", str);
     if (str.empty()) {
         log::error("date-format is empty, resetting to default");
         Mod::get()->getSetting("date-format")->reset();
@@ -397,6 +396,74 @@ std::vector<LeaderboardEntry> GuessManager::jsonToEntries(std::vector<matjson::V
     }
 
     return entries;
+}
+
+void GuessManager::getGuesses(int accountID, std::function<void(GuessesResponse)> callback, int page) {
+    m_listener.bind([this, callback] (web::WebTask::Event* e) {
+        if (web::WebResponse* res = e->getValue()) {
+            if (res->code() != 200) {
+                showError(fmt::format("error getting guesses; http code: {}, error: {}", res->code(), res->string().unwrapOr("unable to get error string")));
+                return;
+            }
+
+            auto jsonRes = res->json();
+            if (jsonRes.isErr()) {
+                showError(fmt::format("error getting json: {}", jsonRes.unwrapErr()));
+                return;
+            }
+
+            auto json = jsonRes.unwrap();
+
+            auto guessesResult = json["guesses"].asArray();
+            if (guessesResult.isErr()) {
+                log::error("unable to get guesses: ", guessesResult.unwrapErr());
+                return;
+            }
+
+            std::vector<GuessEntry> entries = {};
+
+            for (auto lbEntry : guessesResult.unwrap()) {
+                #define ENTRY_VALUE(key, return_type, func, default) \
+                    .key = static_cast<return_type>(lbEntry[#key].func().unwrapOr(default))
+
+                auto correct_date_split = geode::utils::string::split(lbEntry["correct_date"].asString().unwrapOr(""), "-");
+                auto guessed_date_split = geode::utils::string::split(lbEntry["guessed_date"].asString().unwrapOr(""), "-");
+                GuessEntry entry = {
+                    ENTRY_VALUE(level_id, int, asInt, 0),
+                    ENTRY_VALUE(account_id, int, asInt, 0),
+                    ENTRY_VALUE(mode, GameMode, asInt, 0),
+                    ENTRY_VALUE(score, int, asInt, 0),
+                    .correct_date = {
+                        .year = geode::utils::numFromString<int>(correct_date_split[0]).unwrapOr(0),
+                        .month = geode::utils::numFromString<int>(correct_date_split[1]).unwrapOr(0),
+                        .day = geode::utils::numFromString<int>(correct_date_split[2]).unwrapOr(0)
+                    },
+                    .guessed_date = {
+                        .year = geode::utils::numFromString<int>(guessed_date_split[0]).unwrapOr(0),
+                        .month = geode::utils::numFromString<int>(guessed_date_split[1]).unwrapOr(0),
+                        .day = geode::utils::numFromString<int>(guessed_date_split[2]).unwrapOr(0)
+                    },
+                    ENTRY_VALUE(level_name, std::string, asString, "-"),
+                    ENTRY_VALUE(level_creator, std::string, asString, "-"),
+                };
+
+                entries.push_back(entry);
+
+                #undef ENTRY_VALUE
+            }
+
+            callback({
+                .entries = entries,
+                .page = static_cast<int>(json["page"].asInt().unwrapOr(0)),
+                .total_pages = static_cast<int>(json["total_pages"].asInt().unwrapOr(0))
+            });
+        } else if (e->isCancelled()) {
+            showError("request cancelled");
+        }
+    });
+
+    auto req = web::WebRequest();
+    m_listener.setFilter(req.get(fmt::format("{}/guesses/{}?page={}", getServerUrl(), accountID, page))); 
 }
 
 void GuessManager::getLeaderboard(std::function<void(std::vector<LeaderboardEntry>)> callback) {

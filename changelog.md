@@ -1,3 +1,7 @@
+# 1.0.0-beta.10
+- NEW Account Popup
+- Guess History
+
 # 1.0.0-beta.9
 - Bump Argon version
 - New starting popup

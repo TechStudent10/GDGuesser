@@ -30,12 +30,19 @@ struct LeaderboardEntry {
 
 struct GuessEntry {
     int level_id;
+    int account_id;
     GameMode mode;
     int score;
     LevelDate correct_date;
     LevelDate guessed_date;
     std::string level_name;
     std::string level_creator;
+};
+
+struct GuessesResponse {
+    std::vector<GuessEntry> entries;
+    int page;
+    int total_pages;
 };
 
 struct GameOptions {
@@ -122,6 +129,7 @@ public:
 
     void getLeaderboard(std::function<void(std::vector<LeaderboardEntry>)> callback);
     void getAccount(int accountID, std::function<void(LeaderboardEntry)> callback);
+    void getGuesses(int accountID, std::function<void(GuessesResponse)> callback, int page = 0);
 
     const std::string getServerUrl();
     DateFormat getDateFormat();

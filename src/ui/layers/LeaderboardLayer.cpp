@@ -1,5 +1,6 @@
 #include "LeaderboardLayer.hpp"
 #include <managers/GuessManager.hpp>
+#include <ui/AccountPopup.hpp>
 
 #include <Geode/ui/LoadingSpinner.hpp>
 
@@ -13,8 +14,7 @@ protected:
         nameLabel->limitLabelWidth(150.f, 1.f, .0f);
         
         auto nameBtn = CCMenuItemExt::createSpriteExtra(nameLabel, [lbEntry](CCObject*) {
-            bool myself = lbEntry.account_id == GJAccountManager::get()->m_accountID;
-            ProfilePage::create(lbEntry.account_id, myself)->show();
+            AccountPopup::create(lbEntry)->show();
         });
         
         nameBtn->setAnchorPoint(ccp(.0f, .5f));
