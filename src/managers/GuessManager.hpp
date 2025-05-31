@@ -120,7 +120,9 @@ public:
 
     std::string statusToString(TaskStatus status);
 
-    int dialogProgress = 0;
+
+    std::string formatDate(LevelDate);
+    std::string formatNumberWithCommas(int);
 
     static GuessManager& get() {
         static GuessManager instance;

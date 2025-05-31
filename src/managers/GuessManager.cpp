@@ -563,3 +563,23 @@ std::string GuessManager::statusToString(TaskStatus status) {
 
     return "Unknown";
 }
+
+std::string GuessManager::formatDate(LevelDate date) {
+    switch (GuessManager::get().getDateFormat()) {
+        case DateFormat::American: return fmt::format("{:02d}/{:02d}/{:04d}", date.month, date.day, date.year); break;
+        case DateFormat::Backwards: return fmt::format("{:04d}/{:02d}/{:02d}", date.year, date.month, date.day); break;
+        default: return fmt::format("{:02d}/{:02d}/{:04d}", date.day, date.month, date.year);
+    }
+}
+
+std::string GuessManager::formatNumberWithCommas(int number) {
+    std::string numStr = std::to_string(number);
+    int insertPosition = numStr.length() - 3;
+
+    while (insertPosition > 0) {
+        numStr.insert(insertPosition, ",");
+        insertPosition -= 3;
+    }
+
+    return numStr;
+}

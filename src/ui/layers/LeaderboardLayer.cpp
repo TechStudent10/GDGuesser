@@ -18,7 +18,7 @@ protected:
         });
         
         nameBtn->setAnchorPoint(ccp(.0f, .5f));
-        auto scoreLabel = CCLabelBMFont::create(fmt::format("{}", lbEntry.total_score).c_str(), "bigFont.fnt");
+        auto scoreLabel = CCLabelBMFont::create(GuessManager::get().formatNumberWithCommas(lbEntry.total_score).c_str(), "bigFont.fnt");
         scoreLabel->setScale(.6f);
         scoreLabel->setAlignment(cocos2d::kCCTextAlignmentRight);
         
