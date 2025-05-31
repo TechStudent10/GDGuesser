@@ -692,15 +692,3 @@ std::string GuessManager::formatDate(LevelDate date) {
         default: return fmt::format("{:02d}/{:02d}/{:04d}", date.day, date.month, date.year);
     }
 }
-
-std::string GuessManager::formatNumberWithCommas(int number) {
-    std::string numStr = std::to_string(number);
-    int insertPosition = numStr.length() - 3;
-
-    while (insertPosition > 0) {
-        numStr.insert(insertPosition, ",");
-        insertPosition -= 3;
-    }
-
-    return numStr;
-}

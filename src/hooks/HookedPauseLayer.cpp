@@ -36,17 +36,3 @@ void HookedPauseLayer::customSetup() {
         titleLabel->setString(gm.currentLevel->m_levelName.c_str());
     }
 }
-
-void HookedPauseLayer::onEdit(CCObject* sender) {
-    auto& gm = GuessManager::get();
-    if (!gm.currentLevel) {
-        PauseLayer::onEdit(sender);
-        return;
-    }
-    CCArray* array = CCArray::create();
-    array->addObject(DialogObject::create("Scratch", "You are <cr>not allowed</c> to enter the editor while playing GDGuesser...", 10, 1, false, {255, 255, 255}));
-    auto dl = DialogLayer::createDialogLayer(nullptr, array, 4);
-    dl->setZOrder(106);
-    dl->animateInRandomSide();
-    CCScene::get()->addChild(dl);
-}

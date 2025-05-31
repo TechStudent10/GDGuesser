@@ -142,7 +142,7 @@ bool ResultsPopup::setup(int score, LevelDate correctDate, LevelDate date) {
     totalScoreLabel->setID("result-total-score-label");
 
     auto totalLabel = CCLabelBMFont::create(
-        gm.formatNumberWithCommas(gm.totalScore).c_str(),
+        fmt::format("{}", gm.totalScore).c_str(),
         "goldFont.fnt"
     );
     totalLabel->setScale(0.7f);

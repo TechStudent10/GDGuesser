@@ -105,7 +105,7 @@ protected:
         });
         viewBtn->setScale(0.6f);
         viewBtn->m_baseScale = 0.6f;
-        viewBtn->setPosition({ this->getContentSize().width - 30.f, infoGrid->getPositionY() });
+        viewBtn->setPosition({ this->getContentSize().width - 35.f, this->getContentSize().height / 2 });
 
         menu->addChild(viewBtn);
         this->addChild(menu);
@@ -145,7 +145,6 @@ bool AccountPopup::setup(LeaderboardEntry user) {
     auto username = CCNode::create();
     auto player = SimplePlayer::create(0);
     auto gm = GameManager::get();
-    auto gum = GuessManager::get();
     
     player->updatePlayerFrame(user.icon_id, IconType::Cube);
     player->setColor(gm->colorForIdx(user.color1));
@@ -213,8 +212,8 @@ bool AccountPopup::setup(LeaderboardEntry user) {
     if(user.leaderboard_position <= 25) { STAT("rankIcon_top500_001.png", 0.75f, std::to_string(user.leaderboard_position).c_str()); } else
     if(user.leaderboard_position <= 50) { STAT("rankIcon_top200_001.png", 0.75f, std::to_string(user.leaderboard_position).c_str()); } else
     if(user.leaderboard_position <= 100) { STAT("rankIcon_top1000_001.png", 0.85f, std::to_string(user.leaderboard_position).c_str()); } else
-    { STAT("rankIcon_all_001.png", 1.f, gum.formatNumberWithCommas(user.leaderboard_position).c_str()); }
-    STAT("GJ_starsIcon_001.png", 0.6f, gum.formatNumberWithCommas(user.total_score).c_str());
+    { STAT("rankIcon_all_001.png", 1.f, std::to_string(user.leaderboard_position).c_str()); }
+    STAT("GJ_starsIcon_001.png", 0.6f, std::to_string(user.total_score).c_str());
     STAT("GJ_sTrendingIcon_001.png", 0.85f, fmt::format("{:.1f}%", (float)user.total_score / (float)user.max_score * 100.f).c_str());
 
     #undef STAT
@@ -249,8 +248,8 @@ bool AccountPopup::setup(LeaderboardEntry user) {
         difficultyRow->addChild(item); \
     }
 
-    DIFFICULTY("diffIcon_01_btn_001.png", gum.formatNumberWithCommas(user.total_normal_guesses).c_str())
-    DIFFICULTY("diffIcon_05_btn_001.png", gum.formatNumberWithCommas(user.total_hardcore_guesses).c_str())
+    DIFFICULTY("diffIcon_01_btn_001.png", std::to_string(user.total_normal_guesses).c_str())
+    DIFFICULTY("diffIcon_05_btn_001.png", std::to_string(user.total_hardcore_guesses).c_str())
 
     #undef DIFFICULTY
 

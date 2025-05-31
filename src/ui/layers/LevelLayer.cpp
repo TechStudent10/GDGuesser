@@ -151,9 +151,9 @@ bool LevelLayer::init() {
 
     m_playBtn->setPosition(buttonMenu->convertToNodeSpace(ccp(size.width * 0.5f, size.height * 0.5f + 51.f)));
     m_guessBtn->setPosition(buttonMenu->convertToNodeSpace(ccp(size.width * 0.5f, size.height * 0.5f - 26.f)));
-    m_settingsBtn->setPosition(buttonMenu->convertToNodeSpace(ccp(GEODE_PLATFORM_NAME == "iOS" ? 60.f : 30.f, 70.f)));
-    m_infoBtn->setPosition(buttonMenu->convertToNodeSpace(ccp(GEODE_PLATFORM_NAME == "iOS" ? 60.f : 30.f, 30.f)));
-    m_favouriteBtn->setPosition(buttonMenu->convertToNodeSpace(ccp(GEODE_PLATFORM_NAME == "iOS" ? 98.f : 68.f, 30.f)));
+    m_settingsBtn->setPosition(buttonMenu->convertToNodeSpace(ccp(30.f, 70.f)));
+    m_infoBtn->setPosition(buttonMenu->convertToNodeSpace(ccp(30.f, 30.f)));
+    m_favouriteBtn->setPosition(buttonMenu->convertToNodeSpace(ccp(68.f, 30.f)));
 
     this->addChild(background, -5);
     this->addChild(buttonMenu);
