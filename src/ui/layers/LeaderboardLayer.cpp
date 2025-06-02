@@ -167,13 +167,9 @@ bool GDGLeaderboardLayer::init() {
     closeMenu->setPosition({ 24.f, director->getScreenTop() - 23.f });
     this->addChild(closeMenu);
 
-    auto spinner = LoadingSpinner::create(100.f);
-    spinner->setPosition(size / 2);
-    this->addChild(spinner);
-
     auto& gm = GuessManager::get();
     float listWidth = 400.f;
-    gm.getLeaderboard([this, listWidth, size, spinner](std::vector<LeaderboardEntry> lb) {
+    gm.getLeaderboard([this, listWidth, size](std::vector<LeaderboardEntry> lb) {
         auto listItems = CCArray::create();
         for (int i = 0; i < lb.size(); i++) {
             auto item = lb[i];
@@ -187,7 +183,6 @@ bool GDGLeaderboardLayer::init() {
         listLayer->setAnchorPoint({ 0.5f, 0.5f });
         listLayer->setPosition({ size.width / 2, size.height / 2 - 20.f });
 
-        spinner->removeFromParentAndCleanup(true);
         this->addChild(listLayer);
     });
 

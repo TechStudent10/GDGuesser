@@ -298,7 +298,11 @@ void AccountPopup::getGuesses() {
     }
 
     auto& gm = GuessManager::get();
-    gm.getGuesses(user.account_id, [this](GuessesResponse res) {
+
+    auto spinner = LoadingSpinner::create(50.f);
+    m_mainLayer->addChildAtPosition(spinner, Anchor::Center, ccp(0.f, -60.f));
+
+    gm.getGuesses(user.account_id, [this, spinner](GuessesResponse res) {
         auto historyItems = CCArray::create();
 
         for (auto entry : res.entries) {
@@ -310,6 +314,8 @@ void AccountPopup::getGuesses() {
         auto historyBg = ListView::create(historyItems, 45.f, 240.f, 100.f);
         historyBg->setContentSize({240, 120});
         guessList = Border::create(historyBg, {0,0,0,75}, {240.f, 100.f});
+
+        spinner->removeFromParentAndCleanup(true);
         //yoinked from creationRotation
         if(CCScale9Sprite* borderSprite = typeinfo_cast<CCScale9Sprite*>(guessList->getChildByID("geode.loader/border_sprite"))) {
             float scaleFactor = 1.7f;
