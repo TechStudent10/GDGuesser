@@ -125,7 +125,7 @@ public:
     void safeRemoveLoadingLayer();
     void safeAddLoadingLayer();
 
-    void showError(std::string error);
+    void showError(std::string error, int code);
     void cancelCurrentRequest();
 
     void getLeaderboard(std::function<void(std::vector<LeaderboardEntry>)> callback);
@@ -141,6 +141,7 @@ public:
     std::string encodeBase64(const std::string& input);
 
     std::string statusToString(TaskStatus status);
+    std::string verboseToSimple(int id, std::string error);
     std::vector<LeaderboardEntry> jsonToEntries(std::vector<matjson::Value>);
 
     std::string formatDate(LevelDate);
