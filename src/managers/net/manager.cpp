@@ -120,6 +120,7 @@ void NetworkManager::disconnect() {
     if (error) {
         log::error("no disconnection! {}", error.message());
     }
+    handlers.clear();
 }
 
 TLSCtx NetworkManager::onTlsInit(Handle hdl) {
