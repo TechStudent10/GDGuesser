@@ -2,22 +2,15 @@
 
 const std::string getServerUrl() {
     auto str = Mod::get()->getSettingValue<std::string>("server-url");
-    
-    if (str.empty()) {
-        log::error("server URL is empty... uh oh");
-        return "";
-    }
-
     if (str.ends_with("/")) {
+        if (str.empty()) {
+            log::error("server URL is empty... uh oh");
+            return "";
+        }
         str.pop_back();
     }
-
-    if (!str.starts_with("ws://") && !str.starts_with("wss://")) {
-        #ifdef DEBUG_BUILD
-        str = "ws://" + str;
-        #else
-        str = "wss://" + str;
-        #endif
+    if (str.empty()) {
+        log::error("server URL is empty... uh oh");
     }
 
     return str;
@@ -98,9 +91,8 @@ void NetworkManager::connect(std::string token, std::function<void()> callback) 
         error
     );
 
-    if (error || !connection) {
+    if (error) {
         log::error("no connection! {}", error.message());
-        return;
     }
 
     connection->append_header("Authorization", token);
