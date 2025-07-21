@@ -46,7 +46,8 @@ protected:
         scoreLabel->setScale(0.3f);
         this->addChildAtPosition(scoreLabel, Anchor::Center, ccp(0.f, -15.f));
 
-        auto accuracyLabel = CCLabelBMFont::create(fmt::format("Accuracy: {:.1f}%", (float)player.total_score / (float)player.max_score * 100.f).c_str(), "bigFont.fnt");
+        auto accuracyStat = (float)player.total_score / (float)player.max_score * 100.f;
+        auto accuracyLabel = CCLabelBMFont::create(player.max_score > 0 ? fmt::format("Accuracy: {:.1f}%", (float)player.total_score / (float)player.max_score * 100.f).c_str() : "Accuracy: ???", "bigFont.fnt");
         accuracyLabel->setScale(0.3f);
         this->addChildAtPosition(accuracyLabel, Anchor::Center, ccp(0.f, -25.f));
 
