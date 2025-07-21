@@ -786,6 +786,8 @@ std::string GuessManager::verboseToSimple(int id, std::string error) {
     switch (id) {
         case -1:
             return "Unable to connect to GDGuesser server. Please try again later."; break;
+        case 522:
+            return "Server timed out."; break;
         case 1001:
             return "Server returned invalid GDGuesser round."; break;
         case 1002:
@@ -822,7 +824,6 @@ std::string GuessManager::verboseToSimple(int id, std::string error) {
             return "Failed to send authentication message. Try deleting some of your sent GD messages."; break;
         case 1303:
             return "Request cancelled."; break;
-        
     }
 
     return error.substr(0, 200);

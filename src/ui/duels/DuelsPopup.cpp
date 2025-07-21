@@ -99,41 +99,13 @@ bool DuelsPopup::setup() {
 
     auto& gm = GuessManager::get();
 
-    LeaderboardEntry dummy1 {
-        0,
-        "TheDummy",
-        560,
-        56,
-        5,
-        2,
-        13,
-        0.f,
-        7000,
-        14,
-        0,
-        727
-    };
+    auto leftSpinner = LoadingSpinner::create(50.f);
+    leftSpinner->setID("left-duels-spinner");
+    m_mainLayer->addChildAtPosition(leftSpinner, Anchor::Center, ccp(-85.f, 0.f));
 
-    myNode = PlayerNode::create(dummy1, false);
-    m_mainLayer->addChildAtPosition(myNode, Anchor::Center, ccp(-85.f, 0.f));
-
-    LeaderboardEntry dummy2 {
-        0,
-        "TheDummy2",
-        561,
-        56,
-        2,
-        5,
-        15,
-        0.f,
-        7600,
-        14,
-        1,
-        272
-    };
-
-    oppNode = PlayerNode::create(dummy2, true);
-    m_mainLayer->addChildAtPosition(oppNode, Anchor::Center, ccp(85.f, 0.f));
+    auto rightSpinner = LoadingSpinner::create(50.f);
+    rightSpinner->setID("right-duels-spinner");
+    m_mainLayer->addChildAtPosition(rightSpinner, Anchor::Center, ccp(85.f, 0.f));
 
     auto spr = ButtonSprite::create("Ready Up");
     spr->setScale(0.75f);
@@ -212,8 +184,8 @@ bool DuelsPopup::setup() {
 }
 
 void DuelsPopup::updatePlayers(Duel duel) {
-    if (myNode) myNode->removeFromParent();
-    if (oppNode) oppNode->removeFromParent();
+    if (getChildByIDRecursive("myNode")) myNode->removeFromParent();
+    if (getChildByIDRecursive("oppNode")) oppNode->removeFromParent();
     if (auto label = getChildByIDRecursive("waiting-label")) label->removeFromParent();
 
     LeaderboardEntry myEntry;
@@ -226,11 +198,15 @@ void DuelsPopup::updatePlayers(Duel duel) {
         }
     }
 
+    if (getChildByIDRecursive("left-duels-spinner")) getChildByIDRecursive("left-duels-spinner")->removeFromParent();
+    if (getChildByIDRecursive("right-duels-spinner")) getChildByIDRecursive("right-duels-spinner")->removeFromParent();
+
     myNode = PlayerNode::create(
         myEntry,
         // c++ is dumb
         std::find(duel.playersReady.begin(), duel.playersReady.end(), myEntry.account_id) != duel.playersReady.end()
     );
+    myNode->setID("myNode");
     m_mainLayer->addChildAtPosition(myNode, Anchor::Center, ccp(-85.f, 0.f));
 
     if (oppEntry.account_id != 0) {
@@ -239,6 +215,7 @@ void DuelsPopup::updatePlayers(Duel duel) {
             // c++ is dumb
             std::find(duel.playersReady.begin(), duel.playersReady.end(), oppEntry.account_id) != duel.playersReady.end()
         );
+        oppNode->setID("oppNode");
         m_mainLayer->addChildAtPosition(oppNode, Anchor::Center, ccp(85.f, 0.f));
         this->setTitle(fmt::format("Duels vs. {}", oppEntry.username));
     } else {

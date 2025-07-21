@@ -246,14 +246,31 @@ router.post("/guess/:date", async (req, res) => {
     
     const { date } = req.params
     const levelId = games[account_id].currentLevelId
+
+    let correctDate: string;
     
-    const correctDate: string = (
-    await (
-        await fetch(`https://history.geometrydash.eu/api/v1/date/level/${levelId}/`)).json()
-    )["approx"]["estimation"]
-    .split("T")[0]
-    
-    const levelInfo = await (await fetch(`https://history.geometrydash.eu/api/v1/level/${levelId}`)).json()
+    try {
+        const res = await fetch(`https://history.geometrydash.eu/api/v1/date/level/${levelId}/`)
+        if (!res.ok) throw new Error("History server returned non-OK status")
+
+        const json = await res.json()
+        correctDate = json["approx"]["estimation"].split("T")[0]
+    } catch (err) {
+        res.status(522).send("GDHistory connection timed out")
+        return
+    }
+
+    let levelInfo;
+    try {
+        const res = await fetch(`https://history.geometrydash.eu/api/v1/level/${levelId}`)
+        if (!res.ok) throw new Error("History server returned non-OK status")
+
+        const json = await res.json()
+        levelInfo = json
+    } catch (err) {
+        res.status(522).send("GDHistory connection timed out")
+        return
+    }
 
     const scoreResult = calcScore(stringToLvlDate(date), stringToLvlDate(correctDate), games[account_id].options)
     const score = scoreResult[0]

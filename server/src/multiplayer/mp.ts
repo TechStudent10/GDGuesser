@@ -116,7 +116,7 @@ const handlers: {
     "join duel": async (socket, user, payload) => {
         const joinCode: string = payload["joinCode"]
 
-        if (!games[joinCode] || user.account_id) return; // TODO: send error (caused by user clicking join without entering a code)
+        if (!games[joinCode]) return; // TODO: send error (caused by user clicking join without entering a code)
 
         if (Object.keys(games[joinCode].players).includes(user.account_id.toString())) {
             // TODO: send error
@@ -190,11 +190,19 @@ const handlers: {
         }).date
 
         const duel = getGameByPlayer(user.account_id) as GameMP
-        const correctDate: string = (
-        await (
-            await fetch(`https://history.geometrydash.eu/api/v1/date/level/${duel.currentLevelId}/`)).json()
-        )["approx"]["estimation"]
-        .split("T")[0]
+        let correctDate: string;
+        try {
+            const res = await fetch(`https://history.geometrydash.eu/api/v1/date/level/${duel.currentLevelId}/`)
+            if (!res.ok) throw new Error("History server returned non-OK status")
+
+            const json = await res.json()
+            correctDate = json["approx"]["estimation"].split("T")[0]
+        } catch (err) {
+            // TODO: send this error to client and cancel duel
+            // I trust you to add that error event --Vinster
+            console.error(`gdhistory offline`);
+            return
+        }
 
         const score = calcScore(date, stringToLvlDate(correctDate), duel.options)
         tempScores[duel.joinCode][user.account_id] = score[0]
