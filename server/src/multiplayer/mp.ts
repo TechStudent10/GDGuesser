@@ -116,6 +116,8 @@ const handlers: {
     "join duel": async (socket, user, payload) => {
         const joinCode: string = payload["joinCode"]
 
+        if (!games[joinCode]) return;
+
         if (Object.keys(games[joinCode].players).includes(user.account_id.toString())) {
             // TODO: send error
             return
