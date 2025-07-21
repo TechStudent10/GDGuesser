@@ -116,7 +116,7 @@ const handlers: {
     "join duel": async (socket, user, payload) => {
         const joinCode: string = payload["joinCode"]
 
-        if (!games[joinCode]) return;
+        if (!games[joinCode] || user.account_id) return; // TODO: send error (caused by user clicking join without entering a code)
 
         if (Object.keys(games[joinCode].players).includes(user.account_id.toString())) {
             // TODO: send error
@@ -133,6 +133,8 @@ const handlers: {
         // go through /login which automatically inserts the
         // user into the DB
         // i better not regret this
+
+        // this could prolly be abused to crash the server -- Vinster
         games[joinCode].players[user.account_id] = (await getUserByID(user.account_id)) as User
         sockets[joinCode][user.account_id] = socket
 
