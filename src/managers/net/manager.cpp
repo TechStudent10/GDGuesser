@@ -91,8 +91,9 @@ void NetworkManager::connect(std::string token, std::function<void()> callback) 
         error
     );
 
-    if (error) {
+    if (error || !connection) {
         log::error("no connection! {}", error.message());
+        return;
     }
 
     connection->append_header("Authorization", token);
