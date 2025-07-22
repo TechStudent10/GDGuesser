@@ -189,12 +189,16 @@ void DuelsPersistentNode::slideOn() {
     auto action = CCEaseExponentialOut::create(
         CCMoveBy::create(0.5f, { -MOVE_BY, 0.f })
     );
-    this->runAction(action);
+    if (GuessManager::get().persistentNode) {
+        this->runAction(action);
+    }
 }
 
 void DuelsPersistentNode::slideOff() {
     auto action = CCEaseExponentialIn::create(
         CCMoveBy::create(0.5f, { MOVE_BY, 0.f })
     );
-    this->runAction(action);
+    if (GuessManager::get().persistentNode) {
+        this->runAction(action);
+    }
 }
