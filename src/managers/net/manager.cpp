@@ -91,8 +91,9 @@ void NetworkManager::connect(std::string token, std::function<void()> callback) 
         error
     );
 
-    if (error) {
+    if (error || !connection) {
         log::error("no connection! {}", error.message());
+        return;
     }
 
     connection->append_header("Authorization", token);
@@ -112,6 +113,7 @@ void NetworkManager::disconnect() {
     if (error) {
         log::error("no disconnection! {}", error.message());
     }
+    handlers.clear();
 }
 
 TLSCtx NetworkManager::onTlsInit(Handle hdl) {
