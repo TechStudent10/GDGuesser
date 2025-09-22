@@ -163,8 +163,12 @@ void NetworkManager::onMessage(Handle hdl, Client::message_ptr msg) {
     RecvMessage payload = payloadJSON.unwrap().as<RecvMessage>().unwrap();
     if (handlers.contains(payload.eventName)) {
         Loader::get()->queueInMainThread([this, payload] {
-            for (auto handler : handlers[payload.eventName]) {
-                handler.second(payload.payload);
+            auto it = handlers.find(payload.eventName);
+            if (it == handlers.end()) return;
+
+            auto snapshot = it->second;
+            for (auto& entry : snapshot) {
+                entry.second(payload.payload);
             }
         });
     } else {

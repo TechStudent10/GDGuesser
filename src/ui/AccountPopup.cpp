@@ -337,7 +337,5 @@ void AccountPopup::getGuesses() {
 }
 
 void AccountPopup::onClose(CCObject* sender) {
-    auto& gm = GuessManager::get();
-    gm.cancelCurrentRequest();
     Popup<LeaderboardEntry>::onClose(sender);
 }

@@ -15,8 +15,6 @@ class GuessManager: public LevelDownloadDelegate, public LevelManagerDelegate {
 protected:
     GuessManager() {}
 
-    EventListener<web::WebTask> m_listener;
-
     // JWT
     std::string m_token;
 
@@ -73,7 +71,6 @@ public:
     void safeAddLoadingLayer();
 
     void showError(std::string error, int code);
-    void cancelCurrentRequest();
 
     void getLeaderboard(std::function<void(std::vector<LeaderboardEntry>)> callback);
     void getAccount(std::function<void(LeaderboardEntry)> callback, int accountID = 0, std::string username = "");

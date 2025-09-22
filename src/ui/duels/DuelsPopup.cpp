@@ -80,7 +80,7 @@ DuelsPopup* DuelsPopup::create() {
 }
 
 bool DuelsPopup::setup() {
-    this->setTitle("Duels vs. amoung pequeno");
+    this->setTitle("Duels vs. ??????");
 
     auto bg = cocos2d::extension::CCScale9Sprite::create("square02b_001.png", { 0.0f, 0.0f, 80.0f, 80.0f });
     bg->setContentSize({340,148});
@@ -161,9 +161,10 @@ bool DuelsPopup::setup() {
             nm.on<DuelEnded>([](DuelEnded event) {
                 auto& gm = GuessManager::get();
                 gm.currentDuel = event.duel;
-                gm.persistentNode->forget();
-                gm.persistentNode = nullptr;
-    
+                if (gm.persistentNode) {
+                    gm.persistentNode->forget();
+                    gm.persistentNode = nullptr;
+                }
                 CCDirector::sharedDirector()->pushScene(
                     CCTransitionFade::create(.5f, DuelsWinLayer::scene(
                         event.duel.players[std::to_string(event.winner)],
