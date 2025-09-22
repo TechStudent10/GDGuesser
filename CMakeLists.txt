@@ -42,7 +42,14 @@ endif()
 add_subdirectory($ENV{GEODE_SDK} ${CMAKE_CURRENT_BINARY_DIR}/geode)
 
 CPMAddPackage("gh:GlobedGD/argon@1.1.0")
-CPMAddPackage("gh:zaphoyd/websocketpp#0.8.2")
+
+CPMAddPackage(
+  NAME websocketpp
+  GITHUB_REPOSITORY zaphoyd/websocketpp
+  GIT_TAG 0.8.2
+  DOWNLOAD_ONLY YES
+)
+
 include(cmake/FindAsio.cmake)
 
 # THANK YOU ALK
