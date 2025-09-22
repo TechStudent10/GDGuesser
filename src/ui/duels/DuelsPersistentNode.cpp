@@ -170,7 +170,6 @@ void DuelsPersistentNode::updateDuel(Duel duel) {
 }
 
 void DuelsPersistentNode::persist() {
-    if (isPersisted) return;
     log::debug("persisting");
     auto sm = SceneManager::get();
     sm->keepAcrossScenes(this);
@@ -179,7 +178,6 @@ void DuelsPersistentNode::persist() {
 }
 
 void DuelsPersistentNode::forget() {
-    if (!isPersisted) return;
     auto sm = SceneManager::get();
     sm->forget(this);
     this->removeFromParentAndCleanup(true);

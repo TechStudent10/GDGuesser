@@ -1,4 +1,5 @@
 #include "DuelsWinLayer.hpp"
+#include <Geode/binding/GameManager.hpp>
 #include <managers/GuessManager.hpp>
 
 class FinalPlayerStatNode : public CCNode {
@@ -228,6 +229,14 @@ bool DuelsWinLayer::init(LeaderboardEntry winner, LeaderboardEntry loser) {
     thxLabel->setScale(0.8f);
     this->addChild(thxLabel);
 
+    auto& gm = GuessManager::get();
+
+    if (gm.realLevel && Mod::get()->getSettingValue<bool>("dont-save-levels")) {
+        GameLevelManager::get()->deleteLevel(gm.realLevel);
+        gm.realLevel = nullptr;
+    }
+    gm.currentLevel = nullptr;
+
     auto continueBtn = CCMenuItemExt::createSpriteExtra(
         ButtonSprite::create("Continue"),
         [channel](auto) {
@@ -341,6 +350,7 @@ bool DuelsWinLayer::init(LeaderboardEntry winner, LeaderboardEntry loser) {
         nullptr
     );
     this->runAction(animation);
+    gm.safeRemoveLoadingLayer();
 
 
     return true;

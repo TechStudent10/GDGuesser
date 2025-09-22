@@ -29,7 +29,6 @@ public:
     void slideOff();
 protected:
     bool init() override;
-    bool isPersisted = false;
 
     void updateDuel(Duel duel);
 
