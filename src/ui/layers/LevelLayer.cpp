@@ -237,8 +237,24 @@ void LevelLayer::playStep4() {
 }
 
 void LevelLayer::keyBackClicked() {
+    auto& nm = NetworkManager::get();
     auto& gm = GuessManager::get();
-    gm.endGame(true);
+    if (!gm.duelJoinCode.empty() && nm.isConnected) {
+        createQuickPopup(
+            "End Game?",
+            "Are you sure you want to <cr>forfeit the duel</c>?",
+            "No", "Yes",
+            [](auto, bool btn2) {
+                if (!btn2) return;
+                Forfeit ev = {};
+                auto& nm = NetworkManager::get();
+                nm.send(ev);
+            }
+        );
+    } else {
+        auto& gm = GuessManager::get();
+        gm.endGame(true);
+    }
 }
 
 void LevelLayer::createLoadingSprite() {

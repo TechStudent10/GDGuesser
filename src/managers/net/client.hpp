@@ -35,4 +35,8 @@ struct OpponentGuessed {
     NAME("opponent guessed")
 };
 
+struct Forfeit {
+    NAME("forfeit")
+};
+
 #undef NAME

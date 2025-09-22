@@ -198,16 +198,25 @@ bool DuelsResultsPopup::setup(DuelResults results) {
     auto readyUpSpr = ButtonSprite::create("Ready Up", "goldFont.fnt", "GJ_button_01.png", 0.9);
     readyUpSpr->setScale(0.8f);
     auto readyUpBtn = CCMenuItemExt::createSpriteExtra(readyUpSpr, [](CCObject*) {
-        auto& nm = NetworkManager::get();
         ToggleReady ev = {};
+        auto& nm = NetworkManager::get();
         nm.send(ev);
     });
 
     auto forfeitSpr = ButtonSprite::create("Forfeit", "goldFont.fnt", "GJ_button_06.png", 0.9);
     forfeitSpr->setScale(0.8f);
     auto forfeitBtn = CCMenuItemExt::createSpriteExtra(forfeitSpr, [](CCObject*) {
-        // auto& gm = GuessManager::get();
-        // gm.endGame(false);
+        createQuickPopup(
+            "End Game?",
+            "Are you sure you want to <cr>forfeit the duel</c>?",
+            "No", "Yes",
+            [](auto, bool btn2) {
+                if (!btn2) return;
+                Forfeit ev = {};
+                auto& nm = NetworkManager::get();
+                nm.send(ev);
+            }
+        );
     });
     
     auto nextRoundMenu = CCMenu::create();

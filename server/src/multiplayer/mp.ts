@@ -277,6 +277,46 @@ const handlers: {
                 }
             )
         )
+    },
+    "forfeit": (socket, user, payload) => {
+        try {
+            const duel = getGameByPlayer(user.account_id) as GameMP
+            if (duel.playersReady.includes(user.account_id)) {
+                duel.playersReady.splice(
+                    duel.playersReady.indexOf(user.account_id),
+                    1
+                )
+            }
+            // this is only true if the duel has started
+            if (Object.keys(duel.scores).length !== 0) {
+                broadcast(
+                    duel.joinCode,
+                    createEvent<DuelEnded>(
+                        "duel ended",
+                        {
+                            duel,
+                            loser: user.account_id,
+                            winner: parseInt(Object.keys(duel.players).filter(
+                                accId => accId !== user?.account_id.toString()
+                            )[0])
+                        }
+                    )
+                )
+
+                console.log(`duel ${duel.joinCode} ended`)
+                return
+            }
+            
+            if (Object.keys(duel.players).length === 0) {
+                deleteDuel(duel.joinCode)
+                console.log(`deleted duel ${duel.joinCode}`)
+                return
+            }
+            games[duel.joinCode] = duel
+            duelUpdated(duel.joinCode)
+        } catch (e) {
+            console.error(e)
+        }
     }
 }
 
