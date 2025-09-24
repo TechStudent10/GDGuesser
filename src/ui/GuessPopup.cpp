@@ -89,6 +89,7 @@ bool GuessPopup::setup() {
         }
         
         if (!invalidDate) {
+            closedViaGuess = true;
             this->onClose(nullptr);
             gm.submitGuess({
                 year,
@@ -126,7 +127,7 @@ void GuessPopup::textInputReturn(CCTextInputNode* p0) { // Moves it back
 void GuessPopup::onClose(CCObject* sender) {
     auto& gm = GuessManager::get();
 
-    if (gm.persistentNode) {
+    if (gm.persistentNode && closedViaGuess == false) {
         gm.persistentNode->slideOn();
     }
     Popup<>::onClose(sender);

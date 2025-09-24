@@ -377,12 +377,12 @@ bool DuelsResultsPopup::setup(DuelResults results) {
         gm.formatDate(results.correctDate).c_str(),
         "bigFont.fnt"
     );
-    correctDateLabel->setScale(0.35f);
+    correctDateLabel->setScale(0.5f);
     correctDateLabel->setColor({ 96, 171, 239 });
-    m_mainLayer->addChildAtPosition(correctDateLabel, Anchor::Center, ccp(0.f, 0.f));
+    m_mainLayer->addChildAtPosition(correctDateLabel, Anchor::Center, ccp(0.f, -10.f));
     correctDateLabel->setID("result-correct-date-label");
 
-    auto readyUpSpr = ButtonSprite::create("Ready Up", "goldFont.fnt", "GJ_button_01.png", 0.9);
+    auto readyUpSpr = ButtonSprite::create("Continue (0/2)", "goldFont.fnt", "GJ_button_01.png", 0.9);
     readyUpSpr->setScale(0.8f);
     auto readyUpBtn = CCMenuItemExt::createSpriteExtra(readyUpSpr, [](CCObject*) {
         ToggleReady ev = {};
@@ -418,11 +418,11 @@ bool DuelsResultsPopup::setup(DuelResults results) {
     m_mainLayer->addChildAtPosition(nextRoundMenu, Anchor::Bottom, ccp(0.f, 25.f));
 
     auto& nm = NetworkManager::get();
-    // nm.on<DuelUpdated>([this](DuelUpdated info) {
-    //     updatePlayers(info.duel);
-    //     auto& gm = GuessManager::get();
-    //     gm.currentDuel = info.duel;
-    // });
+    nm.on<DuelUpdated>([this, readyUpSpr](DuelUpdated info) {
+        readyUpSpr->setString(fmt::format("Continue ({}/2)", info.duel.playersReady.size()).c_str());
+        auto& gm = GuessManager::get();
+        gm.currentDuel = info.duel;
+    });
     nm.on<RoundStarted>([this](RoundStarted event) {
         auto& gm = GuessManager::get();
         gm.persistentNode->slideOn();

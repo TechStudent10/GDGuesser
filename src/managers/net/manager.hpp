@@ -127,6 +127,17 @@ public:
     }
 
     template<HasEventName T>
+    int once(std::function<void(T)> callback) {
+        auto id = std::make_shared<int>(-1);
+        int real = this->on<T>([this, callback, id](T ev) {
+            callback(ev);
+            this->unbind<T>(*id);
+        });
+        *id = real;
+        return real;
+    }
+
+    template<HasEventName T>
     void unbind(int idx) {
         handlers[T::EVENT_NAME].erase(idx);
     }

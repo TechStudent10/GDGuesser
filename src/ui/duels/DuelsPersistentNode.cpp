@@ -173,7 +173,8 @@ void DuelsPersistentNode::persist() {
     log::debug("persisting");
     auto sm = SceneManager::get();
     sm->keepAcrossScenes(this);
-    this->setZOrder(9999);
+    int highest = CCScene::get()->getHighestChildZ();
+    this->setZOrder(highest + 1);
     log::debug("persisted"); 
 }
 

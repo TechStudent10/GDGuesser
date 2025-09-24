@@ -333,7 +333,7 @@ void GuessManager::submitGuess(LevelDate date, std::function<void(int score, Lev
         };
         nm.send(event);
         updateStatusAndLoading(TaskStatus::WaitingForOpponent);
-        nm.on<DuelResults>([this](DuelResults event) {
+        nm.once<DuelResults>([this](DuelResults event) {
             safeRemoveLoadingLayer();
             DuelsResultsPopup::create(event)->show();
         });
