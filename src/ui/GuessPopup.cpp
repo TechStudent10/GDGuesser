@@ -1,4 +1,5 @@
 #include "GuessPopup.hpp"
+#include "ui/duels/DuelsPersistentNode.hpp"
 #include <managers/GuessManager.hpp>
 #include <ui/ResultsPopup.hpp>
 
@@ -16,6 +17,10 @@ bool GuessPopup::setup() {
     this->setTitle("Input your guess!");
 
     auto& gm = GuessManager::get();
+
+    if (gm.persistentNode) {
+        gm.persistentNode->slideOff();
+    }
     
     m_yearInput = NumberInput::create("Year", 2025, 2013, InputType::Year);
     m_yearInput->setAnchorPoint({ 0.5f, 0.5f });
@@ -116,4 +121,13 @@ void GuessPopup::textInputReturn(CCTextInputNode* p0) { // Moves it back
     auto size = CCDirector::get()->getWinSize();
     m_mainLayer->stopAllActions();
     m_mainLayer->runAction(CCMoveTo::create(.2f, size * .5f));
+}
+
+void GuessPopup::onClose(CCObject* sender) {
+    auto& gm = GuessManager::get();
+
+    if (gm.persistentNode) {
+        gm.persistentNode->slideOn();
+    }
+    Popup<>::onClose(sender);
 }

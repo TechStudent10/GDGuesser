@@ -1,11 +1,10 @@
 #include "DuelsResultsPopup.hpp"
 #include "Geode/cocos/actions/CCActionEase.h"
-#include "Geode/cocos/actions/CCActionInstant.h"
 #include "Geode/cocos/actions/CCActionInterval.h"
 #include "Geode/cocos/base_nodes/CCNode.h"
 #include "Geode/cocos/cocoa/CCObject.h"
 #include "Geode/cocos/label_nodes/CCLabelBMFont.h"
-#include "Geode/cocos/misc_nodes/CCClippingNode.h"
+#include "ui/duels/DuelsPersistentNode.hpp"
 #include "Geode/ui/Layout.hpp"
 #include "Geode/utils/cocos.hpp"
 
@@ -96,6 +95,8 @@ bool DuelsResultsPopup::setup(DuelResults results) {
     auto& gm = GuessManager::get();
     auto director = CCDirector::sharedDirector();
     auto size = director->getWinSize();
+    
+    gm.persistentNode->slideOff();
 
     m_closeBtn->removeFromParent();
 
@@ -424,6 +425,7 @@ bool DuelsResultsPopup::setup(DuelResults results) {
     // });
     nm.on<RoundStarted>([this](RoundStarted event) {
         auto& gm = GuessManager::get();
+        gm.persistentNode->slideOn();
         gm.startGame(event.levelId, event.options);
     });
 
