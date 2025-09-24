@@ -315,9 +315,15 @@ void GuessManager::joinDuel(std::string code, std::function<void()> cb) {
         };
         nm.send(joinEv);
 
-        nm.on<DuelJoined>([this, code, cb](auto) {
-            this->duelJoinCode = code;
-            cb();
+        nm.once<DuelJoined>([this, code, cb](auto event) {
+            if (event.status != 0) {
+                Notification::create(verboseToSimple(event.status, ""), NotificationIcon::Error, 1.f)->show();
+                auto& nm = NetworkManager::get();
+                nm.disconnect();
+            } else {
+                this->duelJoinCode = code;
+                cb();
+            }
         });
     });
 }
@@ -879,7 +885,7 @@ std::string GuessManager::verboseToSimple(int id, std::string error) {
         case 1106:
             return "Unable to get total score."; break;
         case 1107:
-            return "Not logged into a Geometry Dash account"; break;
+            return "Not logged into a Geometry Dash account."; break;
         case 1201:
             return "Unable to load level."; break;
         case 1202:
@@ -890,6 +896,12 @@ std::string GuessManager::verboseToSimple(int id, std::string error) {
             return "Failed to send authentication message. Try deleting some of your sent GD messages."; break;
         case 1303:
             return "Request cancelled."; break;
+        case 1401:
+            return "Invalid lobby!"; break;
+        case 1402:
+            return "This lobby is full!"; break;
+        case 1403:
+            return "Invalid player state!"; break;
     }
 
     return error.substr(0, 200);

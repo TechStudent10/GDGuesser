@@ -116,15 +116,36 @@ const handlers: {
     "join duel": async (socket, user, payload) => {
         const joinCode: string = payload["joinCode"]
 
-        if (!games[joinCode]) return; // TODO: send error (caused by user clicking join without entering a code)
+        if (!games[joinCode]) {
+            socket.send(
+                createEvent<DuelJoined>(
+                    "duel joined", {
+                        status: 1401
+                    }
+                )
+            )
+            return
+        }
 
         if (Object.keys(games[joinCode].players).includes(user.account_id.toString())) {
-            // TODO: send error
+            socket.send(
+                createEvent<DuelJoined>(
+                    "duel joined", {
+                        status: 1403
+                    }
+                )
+            )
             return
         }
 
         if (Object.keys(games[joinCode].players).length >= 2) {
-            // TODO: send error
+            socket.send(
+                createEvent<DuelJoined>(
+                    "duel joined", {
+                        status: 1402
+                    }
+                )
+            )
             return
         }        
 
@@ -140,7 +161,9 @@ const handlers: {
 
         socket.send(
             createEvent<DuelJoined>(
-                "duel joined", {}
+                "duel joined", {
+                    status: 0
+                }
             )
         )
 
@@ -331,7 +354,7 @@ function setupMP(server: HTTPServer) {
         socket.on("close", () => {
             console.log("oh we closed!")
 
-            if (!user) {
+            if (!user || !getGameByPlayer(user.account_id)) {
                 // we can safely assume they aren't in a duel
                 return
             }

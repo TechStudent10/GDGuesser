@@ -22,6 +22,11 @@ NetworkManager::NetworkManager() {
 
 void NetworkManager::init() {
     client.init_asio();
+    client.clear_access_channels(
+        websocketpp::log::alevel::frame_header |
+        websocketpp::log::alevel::frame_payload |
+        websocketpp::log::alevel::control
+    );
 
     #ifndef DEBUG_BUILD
     client.set_tls_init_handler([this](Handle hdl) -> TLSCtx {

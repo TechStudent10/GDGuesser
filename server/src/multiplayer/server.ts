@@ -6,7 +6,9 @@ export type DuelCreated = {
     joinCode: string
 }
 
-export type DuelJoined = {}
+export type DuelJoined = {
+    status: number
+}
 
 export type DuelUpdated = {
     duel: GameMP

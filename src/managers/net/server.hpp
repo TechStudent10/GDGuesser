@@ -13,6 +13,8 @@ struct DuelCreated {
 
 struct DuelJoined {
     NAME("duel joined")
+
+    int status;
 };
 
 struct DuelUpdated {
