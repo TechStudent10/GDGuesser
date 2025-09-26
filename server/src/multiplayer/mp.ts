@@ -221,8 +221,17 @@ const handlers: {
             const json = await res.json()
             correctDate = json["approx"]["estimation"].split("T")[0]
         } catch (err) {
-            // TODO: send this error to client and cancel duel
-            // I trust you to add that error event --Vinster
+            broadcast(
+                duel.joinCode,
+                createEvent<DuelEnded>(
+                    "duel ended",
+                    {
+                        duel,
+                        loser: 0,
+                        winner: 0
+                    }
+                )
+            )
             console.error(`gdhistory offline`);
             return
         }

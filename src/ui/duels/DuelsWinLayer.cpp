@@ -182,6 +182,8 @@ bool DuelsWinLayer::init(LeaderboardEntry winner, LeaderboardEntry loser) {
 
     system->createSound((Mod::get()->getResourcesDir() / "duels-end.mp3").string().c_str(), FMOD_DEFAULT, nullptr, &sound);
     system->playSound(sound, nullptr, false, &channel);
+
+    channel->setVolume(Mod::get()->getSettingValue<bool>("duels-music-playback") == false ? 0.f : FMODAudioEngine::get()->getBackgroundMusicVolume());
     
     auto bg = RepeatingBackground::create();
     this->addChild(bg);

@@ -124,6 +124,7 @@ void NetworkManager::disconnect() {
 TLSCtx NetworkManager::onTlsInit(Handle hdl) {
     auto ctx = TLSCtx(new asio::ssl::context(asio::ssl::context::tlsv12_client));
 
+    ctx->set_default_verify_paths();
     ctx->set_verify_mode(asio::ssl::verify_peer);
 
     return ctx;

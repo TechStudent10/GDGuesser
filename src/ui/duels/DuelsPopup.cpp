@@ -165,12 +165,38 @@ bool DuelsPopup::setup() {
                     gm.persistentNode->forget();
                     gm.persistentNode = nullptr;
                 }
-                CCDirector::sharedDirector()->pushScene(
-                    CCTransitionFade::create(.5f, DuelsWinLayer::scene(
-                        event.duel.players[std::to_string(event.winner)],
-                        event.duel.players[std::to_string(event.loser)]
-                    ))
-                );
+                if (event.winner != 0 && event.loser != 0) {
+                    CCDirector::sharedDirector()->pushScene(
+                        CCTransitionFade::create(.5f, DuelsWinLayer::scene(
+                            event.duel.players[std::to_string(event.winner)],
+                            event.duel.players[std::to_string(event.loser)]
+                        ))
+                    );
+                } else {
+                    auto layer = CreatorLayer::create();
+                    auto scene = CCScene::create();
+                    scene->addChild(layer);
+                    CCDirector::sharedDirector()->pushScene(
+                        CCTransitionFade::create(.5f, scene)
+                    );
+                    GameManager::get()->fadeInMenuMusic();
+                    gm.safeRemoveLoadingLayer();
+                    layer->runAction(CCSequence::create(
+                        CCDelayTime::create(0.6f),
+                        CallFuncExt::create([]() {
+                            auto& gm = GuessManager::get();
+                            gm.showError("GD History Unavailable!", 1501);
+                        }),
+                        nullptr
+                    ));
+                    if (gm.realLevel && Mod::get()->getSettingValue<bool>("dont-save-levels")) {
+                        GameLevelManager::get()->deleteLevel(gm.realLevel);
+                        gm.realLevel = nullptr;
+                    }
+                    gm.currentLevel = nullptr;
+                    
+                }
+                
 
                 auto& nm = NetworkManager::get();
                 nm.disconnect();
