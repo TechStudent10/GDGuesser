@@ -902,6 +902,8 @@ std::string GuessManager::verboseToSimple(int id, std::string error) {
             return "This lobby is full!"; break;
         case 1403:
             return "Invalid player state!"; break;
+        case 1501:
+            return "GDHistory returned invalid date. (likely down)"; break;
     }
 
     return error.substr(0, 200);

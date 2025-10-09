@@ -54,7 +54,7 @@ protected:
         scoreLabel->setScale(0.5f);
         scoreLabel->setAnchorPoint({alignment == false ? 0.f : 1.0f, 0.5f});
         this->addChildAtPosition(scoreLabel, Anchor::Center, ccp(0.f, -20.f));
-        float t = std::clamp(score > oppScore ? totalScore : totalScore + (oppScore - score) / 650.f, 0.f, 1.f);
+        float t = std::clamp((score > oppScore ? totalScore : totalScore + (oppScore - score)) / 650.f, 0.f, 1.f);
         GLubyte red   = static_cast<GLubyte>((1.f - t) * 255);
         GLubyte green = static_cast<GLubyte>(t * 255);
         scoreLabel->setColor({red, green, 0});
