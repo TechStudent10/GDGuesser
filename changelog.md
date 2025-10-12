@@ -1,3 +1,10 @@
+# 1.0.0-beta.12
+- NEW DUELS GAMEMODE!!!
+- Duels enables you to go head-to-head with another player
+- Similarly to GeoGuessr, you each have a starting health; first person to deplete to 0 loses
+- THANK YOU TO VINSTER FOR ALL HIS HELP IN GETTING THIS UPDATE OUT!
+- Genuinely, without his help this update would have taken longer than it already has :pray:
+
 # 1.0.0-beta.11
 - Show a loading screen when getting a player
 - Show the loading screen and remove it properly
