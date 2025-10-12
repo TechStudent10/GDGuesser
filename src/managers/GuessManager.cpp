@@ -290,6 +290,8 @@ void GuessManager::startNewGame(GameOptions options) {
 }
 
 void GuessManager::createDuel(std::function<void()> cb) {
+    safeAddLoadingLayer();
+    updateStatusAndLoading(TaskStatus::CreatingLobby);
     NetworkManager::get().connect(m_token, [this, cb]() {
         auto& nm = NetworkManager::get();
 
@@ -307,6 +309,8 @@ void GuessManager::createDuel(std::function<void()> cb) {
 }
 
 void GuessManager::joinDuel(std::string code, std::function<void()> cb) {
+    safeAddLoadingLayer();
+    updateStatusAndLoading(TaskStatus::JoiningLobby);
     NetworkManager::get().connect(m_token, [this, code, cb]() {
         auto& nm = NetworkManager::get();
 
@@ -323,6 +327,7 @@ void GuessManager::joinDuel(std::string code, std::function<void()> cb) {
             } else {
                 this->duelJoinCode = code;
                 cb();
+                safeRemoveLoadingLayer();
             }
         });
     });
@@ -846,6 +851,12 @@ std::string GuessManager::statusToString(TaskStatus status) {
 
         case TaskStatus::WaitingForOpponent:
             return "Waiting for opponent..."; break;
+
+        case TaskStatus::CreatingLobby:
+            return "Creating Lobby"; break;
+
+        case TaskStatus::JoiningLobby:
+            return "Joining Lobby"; break;
 
         default:
             return "Unknown"; break;
