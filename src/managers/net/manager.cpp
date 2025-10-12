@@ -158,7 +158,7 @@ void NetworkManager::onFail(Handle hdl) {
 }
 
 void NetworkManager::onMessage(Handle hdl, Client::message_ptr msg) {
-    log::debug("{}", msg->get_payload());
+    // log::debug("{}", msg->get_payload());
     auto payloadJSON = matjson::parse(msg->get_payload());
     if (payloadJSON.isErr()) {
         log::error("unable to convert raw payload to json: {}", payloadJSON.unwrapErr());

@@ -1,6 +1,6 @@
 {
   "name": "gdguesser-server",
-  "version": "1.0.0-beta.12",
+  "version": "1.0.0-beta.13",
   "description": "GDGuesser Server",
   "main": "out/main.js",
   "author": "TechStudent10",

@@ -6,7 +6,7 @@ Inspired by [this video by Doggie](https://www.youtube.com/watch?v=cglfVPbajHk),
 ### Modes
 - <cy>**Normal**</c> - Guess the level based on the <cg>level name, author, difficulty</c> and level itself
 - <cr>**Hardcore**</c> - Guess the level based on <cr>nothing but the song and the level itself.</c>
-- <ca>**Hardcore**</c> - 1v1 multiplayer mode! Currently only <cy>**Normal**</c> mode.
+- <ca>**Duels**</c> - 1v1 multiplayer mode! Currently only <cy>**Normal**</c> mode.
 
 Scores submitted in Normal mode are out of 500, while Hardcore mode scores are out of 600.
 

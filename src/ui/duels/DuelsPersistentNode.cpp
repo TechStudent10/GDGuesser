@@ -87,18 +87,18 @@ bool DuelsPersistentNode::init() {
     auto& nm = NetworkManager::get();
     GetDuel ev = {};
     nm.send(ev);
-    log::debug("sent");
+    // log::debug("sent");
 
     nm.on<ReceiveDuel>([this](ReceiveDuel event) {
-        log::debug("recing");
+        // log::debug("recing");
         updateDuel(event.duel);
-        log::debug("recv'd");
+        // log::debug("recv'd");
     });
 
     nm.on<DuelUpdated>([this](DuelUpdated event) {
-        log::debug("update start");
+        // log::debug("update start");
         updateDuel(event.duel);
-        log::debug("updated");
+        // log::debug("updated");
         GuessManager::get().currentDuel = event.duel;
     });
 
@@ -138,21 +138,21 @@ bool DuelsPersistentNode::init() {
 }
 
 void DuelsPersistentNode::updateDuel(Duel duel) {
-    log::debug("removing nodes");
+    // log::debug("removing nodes");
     if (myNode) myNode->removeFromParent();
-    log::debug("removed me node");
+    // log::debug("removed me node");
     if (oppNode) oppNode->removeFromParent();
-    log::debug("removed they node");
+    // log::debug("removed they node");
 
     LeaderboardEntry myEntry;
     LeaderboardEntry oppEntry;
     for (auto entry : duel.players) {
         if (entry.second.account_id == GJAccountManager::get()->m_accountID) {
             myEntry = entry.second;
-            log::debug("found me");
+            // log::debug("found me");
         } else {
             oppEntry = entry.second;
-            log::debug("found them");
+            // log::debug("found them");
         }
     }
 
@@ -160,22 +160,22 @@ void DuelsPersistentNode::updateDuel(Duel duel) {
     myNode->setGuessed(false);
     this->addChildAtPosition(myNode, Anchor::BottomLeft, ccp(-80.f, -25.f));
 
-    log::debug("me created");
+    // log::debug("me created");
     
     oppNode = PlayerScoreNode::create(oppEntry, duel.scores[std::to_string(oppEntry.account_id)]);
     oppNode->setGuessed(false);
     this->addChildAtPosition(oppNode, Anchor::BottomLeft, ccp(-80.f, -65.f));
 
-    log::debug("opp created");
+    // log::debug("opp created");
 }
 
 void DuelsPersistentNode::persist() {
-    log::debug("persisting");
+    // log::debug("persisting");
     auto sm = SceneManager::get();
     sm->keepAcrossScenes(this);
     int highest = CCScene::get()->getHighestChildZ();
     this->setZOrder(highest + 1);
-    log::debug("persisted"); 
+    // log::debug("persisted"); 
 }
 
 void DuelsPersistentNode::forget() {

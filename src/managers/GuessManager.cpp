@@ -382,7 +382,7 @@ void GuessManager::submitGuess(LevelDate date, std::function<void(int score, Lev
                 
                 safeRemoveLoadingLayer();
 
-                log::info("{}", static_cast<int>(json["correctDate"]["year"].asInt().unwrapOr(0)));
+                // log::info("{}", static_cast<int>(json["correctDate"]["year"].asInt().unwrapOr(0)));
                 callback(score, {
                     .year = static_cast<int>(json["correctDate"]["year"].asInt().unwrapOr(0)),
                     .month = static_cast<int>(json["correctDate"]["month"].asInt().unwrapOr(0)),

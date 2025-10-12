@@ -111,7 +111,7 @@ bool DuelsPopup::setup() {
     spr->setScale(0.75f);
     readyBtn = CCMenuItemExt::createSpriteExtra(
         spr, [](auto) {
-            log::debug("this will toggle your ready state n' stuff");
+            // log::debug("this will toggle your ready state n' stuff");
 
             auto& nm = NetworkManager::get();
             ToggleReady ev = {};

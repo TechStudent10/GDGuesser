@@ -376,6 +376,29 @@ router.get("/leaderboard", async (req, res) => {
     res.json(results)
 })
 
+// register error handlers
+
+process.on('uncaughtException', (err) => {
+    console.log("uncaught exception!")
+    console.log(err)
+})
+process.on("SIGINT", () => {
+    console.log("got Control+C")
+    process.exit()
+})
+process.on("SIGTERM", () => {
+    console.log("Process killed")
+    process.exit()
+})
+process.on("SIGHUP", () => {
+    console.log("Process killed")
+    process.exit()
+})
+process.on("SIGBREAK", () => {
+    console.log("Process killed")
+    process.exit()
+})
+
 const port = process.env.PORT || 8000
 
 console.log(`listening on port ${port}`)

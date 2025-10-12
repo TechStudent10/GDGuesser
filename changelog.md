@@ -1,3 +1,7 @@
+# 1.0.0-beta.13
+- Fixed the log spam coming from the mod
+- Fixed the server crashing on exception
+
 # 1.0.0-beta.12
 - NEW DUELS GAMEMODE!!!
 - Duels enables you to go head-to-head with another player
