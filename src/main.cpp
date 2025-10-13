@@ -1,8 +1,10 @@
 #include <Geode/Geode.hpp>
 #include <Geode/modify/CreatorLayer.hpp>
+#include <Geode/modify/CCKeyboardDispatcher.hpp>
 #include <managers/GuessManager.hpp>
 #include <ui/StartPopup.hpp>
 #include <Geode/loader/Dispatch.hpp>
+#include <managers/net/manager.hpp>
 
 using namespace geode::prelude;
 using LevelId = int64_t;
@@ -65,6 +67,19 @@ class $modify(MenuLayer) {
         this->addChild(menu);
 
         return true;
+    }
+};
+#endif
+
+#ifdef DEBUG_BUILD
+class $modify (MyCCKeyboardDispatcher, CCKeyboardDispatcher) {
+    bool dispatchKeyboardMSG(enumKeyCodes key, bool down, bool repeat) {
+        if (key == enumKeyCodes::KEY_E && down) {
+            log::debug("disconnect");
+            auto& nm = NetworkManager::get();
+            nm.disconnect();
+        }
+        return CCKeyboardDispatcher::dispatchKeyboardMSG(key, down, repeat);
     }
 };
 #endif

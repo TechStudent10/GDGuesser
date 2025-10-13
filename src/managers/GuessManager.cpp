@@ -915,6 +915,8 @@ std::string GuessManager::verboseToSimple(int id, std::string error) {
             return "Invalid player state!"; break;
         case 1501:
             return "GDHistory returned invalid date. (likely down)"; break;
+        case 1502:
+            return "Connection to GDGuesser server lost"; break;
     }
 
     return error.substr(0, 200);

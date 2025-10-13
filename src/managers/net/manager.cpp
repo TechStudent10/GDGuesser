@@ -1,4 +1,6 @@
 #include "manager.hpp"
+#include <managers/GuessManager.hpp>
+#include <ui/duels/DuelsPersistentNode.hpp>
 
 const std::string getServerUrl() {
     auto str = Mod::get()->getSettingValue<std::string>("server-url");
@@ -114,6 +116,34 @@ void NetworkManager::connect(std::string token) {
 
 void NetworkManager::disconnect() {
     auto error = std::error_code();
+    auto gm = GuessManager::get();
+    if (gm.currentLevel) {
+        if (gm.persistentNode) {
+            gm.persistentNode->forget();
+            gm.persistentNode = nullptr;
+        }
+        auto layer = CreatorLayer::create();
+        auto scene = CCScene::create();
+        scene->addChild(layer);
+        CCDirector::sharedDirector()->pushScene(
+            CCTransitionFade::create(.5f, scene)
+        );
+        GameManager::get()->fadeInMenuMusic();
+        gm.safeRemoveLoadingLayer();
+        layer->runAction(CCSequence::create(
+            CCDelayTime::create(0.6f),
+            CallFuncExt::create([]() {
+                auto& gm = GuessManager::get();
+                gm.showError("Disconnected", 1502);
+            }),
+            nullptr
+        ));
+        if (gm.realLevel && Mod::get()->getSettingValue<bool>("dont-save-levels")) {
+            GameLevelManager::get()->deleteLevel(gm.realLevel);
+            gm.realLevel = nullptr;
+        }
+        gm.currentLevel = nullptr;
+    }
     client.close(hdl, websocketpp::close::status::normal, "User closed connection", error);
     if (error) {
         log::error("no disconnection! {}", error.message());
