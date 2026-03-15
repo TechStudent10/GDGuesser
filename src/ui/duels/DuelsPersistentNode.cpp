@@ -171,16 +171,12 @@ void DuelsPersistentNode::updateDuel(Duel duel) {
 
 void DuelsPersistentNode::persist() {
     // log::debug("persisting");
-    auto sm = SceneManager::get();
-    sm->keepAcrossScenes(this);
-    int highest = CCScene::get()->getHighestChildZ();
-    this->setZOrder(highest + 1);
+    auto sm = OverlayManager::get();
+    sm->addChild(this);
     // log::debug("persisted"); 
 }
 
 void DuelsPersistentNode::forget() {
-    auto sm = SceneManager::get();
-    sm->forget(this);
     this->removeFromParentAndCleanup(true);
 }
 

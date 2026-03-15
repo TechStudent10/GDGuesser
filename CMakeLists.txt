@@ -41,7 +41,7 @@ endif()
 
 add_subdirectory($ENV{GEODE_SDK} ${CMAKE_CURRENT_BINARY_DIR}/geode)
 
-CPMAddPackage("gh:GlobedGD/argon@1.1.0")
+CPMAddPackage("gh:GlobedGD/argon@1.4.6")
 
 CPMAddPackage(
   NAME websocketpp

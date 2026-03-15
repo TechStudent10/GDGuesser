@@ -131,7 +131,7 @@ public:
 
 AccountPopup* AccountPopup::create(LeaderboardEntry user) {
     auto ret = new AccountPopup;
-    if (ret->initAnchored(300.f, 250.f, user)) {
+    if (ret->init(user)) {
         ret->autorelease();
         return ret;
     }
@@ -139,7 +139,9 @@ AccountPopup* AccountPopup::create(LeaderboardEntry user) {
     return nullptr;
 }
 
-bool AccountPopup::setup(LeaderboardEntry user) {
+bool AccountPopup::init(LeaderboardEntry user) {
+    if (!Popup::init(300.f, 250.f)) return false;
+
     this->user = user;
 
     auto username = CCNode::create();
@@ -337,5 +339,5 @@ void AccountPopup::getGuesses() {
 }
 
 void AccountPopup::onClose(CCObject* sender) {
-    Popup<LeaderboardEntry>::onClose(sender);
+    Popup::onClose(sender);
 }

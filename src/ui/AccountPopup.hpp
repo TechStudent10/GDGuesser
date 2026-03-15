@@ -4,9 +4,9 @@
 #include <managers/GuessManager.hpp>
 using namespace geode::prelude;
 
-class AccountPopup : public geode::Popup<LeaderboardEntry> {
+class AccountPopup : public geode::Popup {
 protected:
-    bool setup(LeaderboardEntry user) override;
+    bool init(LeaderboardEntry user);
     void getGuesses();
 
     CCMenuItemSpriteExtra* backBtn;

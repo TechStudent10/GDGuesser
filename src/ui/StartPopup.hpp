@@ -5,10 +5,10 @@
 
 using namespace geode::prelude;
 
-class StartPopup : public geode::Popup<> {
+class StartPopup : public geode::Popup {
 protected:
     GameOptions options = {};
-    bool setup() override;
+    bool init();
 public:
     static StartPopup* create();
 };

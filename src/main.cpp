@@ -6,7 +6,7 @@
 
 using namespace geode::prelude;
 using LevelId = int64_t;
-using LevelIdEvent = geode::DispatchFilter<GJGameLevel*, int64_t*>;
+using LevelIdEvent = geode::Dispatch<GJGameLevel*, int64_t*>;
 
 class $modify(MyCL, CreatorLayer) {
     bool init() {
@@ -125,11 +125,11 @@ $on_mod(Loaded) {
 #endif
 
 $execute {
-    new EventListener(+[](GJGameLevel* level, LevelId* levelId) {
+    auto listener = LevelIdEvent("dankmeme.globed2/setup-level-id").listen([](GJGameLevel* level, LevelId* levelId) {
         auto gm = GuessManager::get();
         if (gm.currentLevel) {
             *levelId = gm.realLevel->m_levelID;
         }
         return ListenerResult::Propagate;
-    }, LevelIdEvent("dankmeme.globed2/setup-level-id"));
+    });
 };

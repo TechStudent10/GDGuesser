@@ -5,7 +5,7 @@
 
 GuessPopup* GuessPopup::create() {
     auto ret = new GuessPopup;
-    if (ret->initAnchored(310.f, 190.f)) {
+    if (ret->popupInit()) {
         ret->autorelease();
         return ret;
     }
@@ -13,7 +13,9 @@ GuessPopup* GuessPopup::create() {
     return nullptr;
 }
 
-bool GuessPopup::setup() {
+bool GuessPopup::popupInit() {
+    if (!Popup::init(310.f, 190.f)) return false;
+
     this->setTitle("Input your guess!");
 
     auto& gm = GuessManager::get();
@@ -130,5 +132,5 @@ void GuessPopup::onClose(CCObject* sender) {
     if (gm.persistentNode && closedViaGuess == false) {
         gm.persistentNode->slideOn();
     }
-    Popup<>::onClose(sender);
+    Popup::onClose(sender);
 }

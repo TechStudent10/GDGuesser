@@ -3,9 +3,9 @@
 
 using namespace geode::prelude;
 
-class DuelsStartPopup : public geode::Popup<> {
+class DuelsStartPopup : public geode::Popup {
 protected:
-    bool setup() override;
+    bool init();
 public:
     static DuelsStartPopup* create();
 };

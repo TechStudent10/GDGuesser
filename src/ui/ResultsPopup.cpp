@@ -3,7 +3,7 @@
 
 ResultsPopup* ResultsPopup::create(int score, LevelDate correctDate, LevelDate date) {
     auto ret = new ResultsPopup;
-    if (ret->initAnchored(360.f, 235.f, score, correctDate, date)) {
+    if (ret->init(score, correctDate, date)) {
         ret->autorelease();
         return ret;
     }
@@ -11,7 +11,9 @@ ResultsPopup* ResultsPopup::create(int score, LevelDate correctDate, LevelDate d
     return nullptr;
 }
 
-bool ResultsPopup::setup(int score, LevelDate correctDate, LevelDate date) {
+bool ResultsPopup::init(int score, LevelDate correctDate, LevelDate date) {
+    if (!Popup::init(360.f, 235.f)) return false;
+    
     this->setTitle("Results");
 
     auto& gm = GuessManager::get();

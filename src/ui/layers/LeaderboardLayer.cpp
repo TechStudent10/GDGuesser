@@ -86,9 +86,11 @@ public:
     }
 };
 
-class SearchPopup : public geode::Popup<> {
+class SearchPopup : public geode::Popup {
 protected:
-    bool setup() {
+    bool init() {
+        if (!Popup::init(210.f, 120.f)) return false;
+
         this->setTitle("Player Search");
         
         auto searchInput = TextInput::create(150.f, "Name");
@@ -121,7 +123,7 @@ protected:
 public:
     static SearchPopup* create() {
         auto ret = new SearchPopup;
-        if (ret->initAnchored(210.f, 120.f)) {
+        if (ret->init()) {
             ret->autorelease();
             return ret;
         }

@@ -5,7 +5,7 @@ using namespace geode::prelude;
 
 #include <managers/types.hpp>
 
-class DuelsPopup : public geode::Popup<> {
+class DuelsPopup : public geode::Popup {
 public:
     static DuelsPopup* create();
 protected:
@@ -14,7 +14,7 @@ protected:
     CCNode* myNode;
     CCNode* oppNode;
 
-    bool setup() override;
+    bool init();
     void updatePlayers(Duel duel);
 
     void onClose(CCObject*) override;

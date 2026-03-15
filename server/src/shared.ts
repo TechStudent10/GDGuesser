@@ -24,7 +24,7 @@ export const ID_CUTOFFS: {[key: string]: number[]} = {
     "1.9": [2804785, 11040708],
     "2.0": [11040709, 28350553],
     "2.1": [28360554, 97454811],
-    "2.2": [97454812, 130000000]
+    "2.2": [97454812, 200000000]
 }
 
 export const VERSION_WEIGHTS: {[key: string]: number[]} = {

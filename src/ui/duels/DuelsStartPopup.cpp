@@ -5,7 +5,7 @@
 
 DuelsStartPopup* DuelsStartPopup::create() {
     auto ret = new DuelsStartPopup;
-    if (ret->initAnchored(265.f, 180.f)) {
+    if (ret->init()) {
         ret->autorelease();
         return ret;
     }
@@ -13,7 +13,9 @@ DuelsStartPopup* DuelsStartPopup::create() {
     return nullptr;
 }
 
-bool DuelsStartPopup::setup() {
+bool DuelsStartPopup::init() {
+    if (!Popup::init(265.f, 180.f)) return false;
+
     this->setTitle("Duels!");
 
     // two buttons, create and join

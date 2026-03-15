@@ -71,7 +71,7 @@ protected:
 
 DuelsPopup* DuelsPopup::create() {
     auto ret = new DuelsPopup;
-    if (ret->initAnchored(360.f, 225.f)) {
+    if (ret->init()) {
         ret->autorelease();
         return ret;
     }
@@ -79,7 +79,9 @@ DuelsPopup* DuelsPopup::create() {
     return nullptr;
 }
 
-bool DuelsPopup::setup() {
+bool DuelsPopup::init() {
+    if (!Popup::init(360.f, 225.f)) return false;
+
     this->setTitle("Duels vs. ??????");
 
     auto bg = cocos2d::extension::CCScale9Sprite::create("square02b_001.png", { 0.0f, 0.0f, 80.0f, 80.0f });
@@ -271,7 +273,7 @@ void DuelsPopup::onClose(CCObject* sender) {
             // server automatically handles leaving
             // we just need to disconnect :D
             nm.disconnect();
-            Popup<>::onClose(sender);
+            Popup::onClose(sender);
         }
     );
 }

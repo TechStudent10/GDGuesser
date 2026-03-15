@@ -5,6 +5,7 @@
 
 #include <Geode/cocos/support/base64.h>
 #include <Geode/cocos/support/zip_support/ZipUtils.h>
+#include <Geode/utils/async.hpp>
 
 #include "GuessManager.hpp"
 #include "net/manager.hpp"
@@ -104,73 +105,67 @@ void GuessManager::authenticate(std::function<void()> cb) {
         safeAddLoadingLayer();
         
         updateStatusAndLoading(TaskStatus::Authenticate);
-        auto res = argon::startAuth([this, cb](Result<std::string> res) {
-            if (!res || res.isErr()) {
-                showError(fmt::format("Argon authentication error: {}", res.unwrapErr()), 1301);
-                return;
-            }
-
-            auto req = web::WebRequest();
-            auto gm = GameManager::get();
-            req.bodyJSON(matjson::makeObject({
-                {"icon_id", gm->getPlayerFrame()},
-                {"color1", gm->m_playerColor.value()},
-                {"color2", gm->m_playerColor2.value()},
-                {"color3", gm->m_playerGlow ?
-                    gm->m_playerGlowColor.value() :
-                    -1
-                },
-                {"account_id", GJAccountManager::get()->m_accountID}
-            }));
-            req.header("Authorization", std::move(res).unwrap());
-            req.header("Version", Mod::get()->getVersion().toNonVString());
-            req.post(fmt::format("{}/login", getServerUrl())).listen([this, cb] (web::WebResponse* res) {
-                safeRemoveLoadingLayer();
-                if (res) {
-                    if (res->code() != 200) {
-                        showError(fmt::format("received non-200 code: {}, {}", res->code(), res->string().unwrapOr("b")), res->code());
-                        return;
-                    }
-
-                    auto jsonRes = res->json();
-                    if (jsonRes.isErr()) {
-                        showError(fmt::format("error getting account json: {}", jsonRes.unwrapErr()), 1002);
-                        return;
-                    }
-
-                    auto json = jsonRes.unwrap();
-
-                    auto scoreResult = json["user"]["total_score"].asInt();
-                    if (scoreResult.isErr()) {
-                        showError(fmt::format("unable to get score: {}", scoreResult.unwrapErr()), 1100);
-                        return;
-                    }
-                    auto score = scoreResult.unwrap();
-                    totalScore = score;
-
-                    auto tokenResult = json["token"].asString();
-                    if (tokenResult.isErr()) {
-                        showError(fmt::format("unable to get JWT!!! {}", tokenResult.unwrapErr()), 1102);
-                        return;
-                    }
-
-                    auto token = tokenResult.unwrap();
-                    m_token = token;
-
-                    cb();
-                } else {
-                    showError("request cancelled", 1303);
+        async::spawn(
+            argon::startAuth(),
+            [this, cb](Result<std::string> res) {
+                if (!res || res.isErr()) {
+                    showError(fmt::format("Argon authentication error: {}", res.unwrapErr()), 1301);
+                    return;
                 }
-            });
-        }, [](argon::AuthProgress progress) {});
 
-        if (!res) {
-            if (res.unwrapErr() != "Stage 2 failed (generic error)") {
-                showError(fmt::format("{}", res.unwrapErr()), 1301);
-            } else {
-                showError(fmt::format("{}", res.unwrapErr()), 1302);
+                auto req = web::WebRequest();
+                auto gm = GameManager::get();
+                req.bodyJSON(matjson::makeObject({
+                    {"icon_id", gm->getPlayerFrame()},
+                    {"color1", gm->m_playerColor.value()},
+                    {"color2", gm->m_playerColor2.value()},
+                    {"color3", gm->m_playerGlow ?
+                        gm->m_playerGlowColor.value() :
+                        -1
+                    },
+                    {"account_id", GJAccountManager::get()->m_accountID}
+                }));
+                req.header("Authorization", std::move(res).unwrap());
+                req.header("Version", Mod::get()->getVersion().toNonVString());
+                async::spawn(
+                    req.post(fmt::format("{}/login", getServerUrl())),
+                    [this, cb] (web::WebResponse res) {
+                        safeRemoveLoadingLayer();
+                        if (res.code() != 200) {
+                            showError(fmt::format("received non-200 code: {}, {}", res.code(), res.string().unwrapOr("b")), res.code());
+                            return;
+                        }
+
+                        auto jsonRes = res.json();
+                        if (jsonRes.isErr()) {
+                            showError(fmt::format("error getting account json: {}", jsonRes.unwrapErr()), 1002);
+                            return;
+                        }
+
+                        auto json = jsonRes.unwrap();
+
+                        auto scoreResult = json["user"]["total_score"].asInt();
+                        if (scoreResult.isErr()) {
+                            showError(fmt::format("unable to get score: {}", scoreResult.unwrapErr()), 1100);
+                            return;
+                        }
+                        auto score = scoreResult.unwrap();
+                        totalScore = score;
+
+                        auto tokenResult = json["token"].asString();
+                        if (tokenResult.isErr()) {
+                            showError(fmt::format("unable to get JWT!!! {}", tokenResult.unwrapErr()), 1102);
+                            return;
+                        }
+
+                        auto token = tokenResult.unwrap();
+                        m_token = token;
+
+                        cb();
+                    }
+                );
             }
-        }
+        );
     };
 
     // check if we haven't already authenticated, otherwise just run the callback
@@ -221,26 +216,27 @@ void GuessManager::startNewGame(GameOptions options) {
         auto optionsCopy = options;
         safeAddLoadingLayer();
         updateStatusAndLoading(TaskStatus::Start);
-        auto listener = std::make_shared<geode::EventListener<web::WebTask>>();
-        listener->bind([this, options, keep = listener] (web::WebTask::Event* e) {
-            auto cleanup = [&, keep]{
-                keep->disable();
-                safeRemoveLoadingLayer();
-            };
+        auto req = web::WebRequest();
+        setupRequest(req, matjson::makeObject({{"options", optionsCopy}}));
+        async::spawn(
+            req.post(fmt::format("{}/start-new-game", getServerUrl())),
+            [this, options] (web::WebResponse res) {
+                auto cleanup = [&]{
+                    safeRemoveLoadingLayer();
+                };
 
-            if (this->currentLevel) {
-                cleanup();
-                return;
-            }
+                if (this->currentLevel) {
+                    cleanup();
+                    return;
+                }
 
-            if (web::WebResponse* res = e->getValue()) {
-                if (res->code() != 200) {
-                    showError(fmt::format("error starting new round; http code: {}, error: {}", res->code(), res->string().unwrapOr("unable to get error string")), res->code());
+                if (res.code() != 200) {
+                    showError(fmt::format("error starting new round; http code: {}, error: {}", res.code(), res.string().unwrapOr("unable to get error string")), res.code());
                     cleanup();
                     return;
                 }
                 
-                auto jsonRes = res->json();
+                auto jsonRes = res.json();
                 if (jsonRes.isErr()) {
                     showError(fmt::format("error getting json: {}", jsonRes.unwrapErr()), 1001);
                     cleanup();
@@ -276,16 +272,8 @@ void GuessManager::startNewGame(GameOptions options) {
                 } else {
                     startGameFr();
                 }
-            } else if (e->isCancelled()) {
-                showError("request cancelled", 1303);
-                cleanup();
             }
-        });
-
-        listener->enable();
-        auto req = web::WebRequest();
-        setupRequest(req, matjson::makeObject({{"options", optionsCopy}}));
-        listener->setFilter(req.post(fmt::format("{}/start-new-game", getServerUrl())));
+        );
     });
 }
 
@@ -343,86 +331,78 @@ void GuessManager::submitGuess(LevelDate date, std::function<void(int score, Lev
             safeRemoveLoadingLayer();
             DuelsResultsPopup::create(event)->show();
         });
-    } else {
-        auto listener = std::make_shared<geode::EventListener<web::WebTask>>();
-        listener->bind([this, callback, date, keep = listener] (web::WebTask::Event* e) {
-            auto cleanup = [&, keep]{
-                keep->disable();
+        return;
+    }
+
+    auto req = web::WebRequest();
+    setupRequest(req, matjson::makeObject({}));
+    async::spawn(
+        req.post(fmt::format("{}/guess/{}-{}-{}", getServerUrl(), date.year, date.month, date.day)),
+        [this, callback, date] (web::WebResponse res) {
+            auto cleanup = [&]{
                 safeRemoveLoadingLayer();
             };
 
-            if (web::WebResponse* res = e->getValue()) {
-                if (res->code() != 200) {
-                    showError(fmt::format("error starting submitting guess; http code: {}, error: {}", res->code(), res->string().unwrapOr("unable to get error string")), res->code());
-                    cleanup();
-                    return;
-                }
-
-                auto jsonRes = res->json();
-                if (jsonRes.isErr()) {
-                    showError(fmt::format("error getting json: {}", jsonRes.unwrapErr()), 1003);
-                    cleanup();
-                    return;
-                }
-
-                auto json = jsonRes.unwrap();
-
-                auto scoreResult = json["score"].asInt();
-                if (scoreResult.isErr()) {
-                    showError(fmt::format("unable to get score: {}", scoreResult.unwrapErr()), 1103);
-                    cleanup();
-                    return;
-                }
-                auto score = scoreResult.unwrap();
-
-                // if all versions aren't selected, your total score will not be impacted
-                if (options.versions.size() == 13) {
-                    totalScore += score;
-                }
-                
-                safeRemoveLoadingLayer();
-
-                // log::info("{}", static_cast<int>(json["correctDate"]["year"].asInt().unwrapOr(0)));
-                callback(score, {
-                    .year = static_cast<int>(json["correctDate"]["year"].asInt().unwrapOr(0)),
-                    .month = static_cast<int>(json["correctDate"]["month"].asInt().unwrapOr(0)),
-                    .day = static_cast<int>(json["correctDate"]["day"].asInt().unwrapOr(0)),
-                }, date);
-                this->currentLevel = nullptr;
-                this->realLevel = nullptr;
+            if (res.code() != 200) {
+                showError(fmt::format("error starting submitting guess; http code: {}, error: {}", res.code(), res.string().unwrapOr("unable to get error string")), res.code());
                 cleanup();
-            } else if (e->isCancelled()) {
-                safeRemoveLoadingLayer();
-                showError("request cancelled", 1303);
-                cleanup();
+                return;
             }
-        });
 
-        listener->enable();
-        auto req = web::WebRequest();
-        setupRequest(req, matjson::makeObject({}));
-        listener->setFilter(req.post(fmt::format("{}/guess/{}-{}-{}", getServerUrl(), date.year, date.month, date.day)));
-    }
+            auto jsonRes = res.json();
+            if (jsonRes.isErr()) {
+                showError(fmt::format("error getting json: {}", jsonRes.unwrapErr()), 1003);
+                cleanup();
+                return;
+            }
+
+            auto json = jsonRes.unwrap();
+
+            auto scoreResult = json["score"].asInt();
+            if (scoreResult.isErr()) {
+                showError(fmt::format("unable to get score: {}", scoreResult.unwrapErr()), 1103);
+                cleanup();
+                return;
+            }
+            auto score = scoreResult.unwrap();
+
+            // if all versions aren't selected, your total score will not be impacted
+            if (options.versions.size() == 13) {
+                totalScore += score;
+            }
+            
+            safeRemoveLoadingLayer();
+
+            callback(score, {
+                .year = static_cast<int>(json["correctDate"]["year"].asInt().unwrapOr(0)),
+                .month = static_cast<int>(json["correctDate"]["month"].asInt().unwrapOr(0)),
+                .day = static_cast<int>(json["correctDate"]["day"].asInt().unwrapOr(0)),
+            }, date);
+            this->currentLevel = nullptr;
+            this->realLevel = nullptr;
+            cleanup();
+        }
+    );
 }
 
 void GuessManager::endGame(bool pendingGuess) {
     log::debug("endgame called!");
     auto doTheThing = [this]() {
-
         safeAddLoadingLayer();
-
+        
         updateStatusAndLoading(TaskStatus::EndGame);
+        
+        auto req = web::WebRequest();
+        setupRequest(req, matjson::makeObject({}));
+        async::spawn(
+            req.post(fmt::format("{}/endGame", getServerUrl())),
+            [this] (web::WebResponse res) {
+                auto cleanup = [&]{
+                    safeRemoveLoadingLayer();
+                };
 
-        auto listener = std::make_shared<geode::EventListener<web::WebTask>>();
-        listener->bind([this, keep = listener] (web::WebTask::Event* e) {
-            auto cleanup = [&, keep]{
-                keep->disable();
-                safeRemoveLoadingLayer();
-            };
-
-            if (web::WebResponse* res = e->getValue()) {
-                if (res->code() != 200 && res->code() != 404) {
-                    showError(fmt::format("error ending game; http code: {}, error: {}", res->code(), res->string().unwrapOr("unable to get error string")), res->code());
+                if (res.code() != 200 && res.code() != 404) {
+                    showError(fmt::format("error ending game; http code: {}, error: {}", res.code(), res.string().unwrapOr("unable to get error string")), res.code());
                     cleanup();
                     return;
                 }
@@ -440,17 +420,8 @@ void GuessManager::endGame(bool pendingGuess) {
                 scene->addChild(layer);
                 CCDirector::sharedDirector()->pushScene(CCTransitionFade::create(.5f, scene));
                 cleanup();
-            } else if (e->isCancelled()) {
-                safeRemoveLoadingLayer();
-                showError("request cancelled", 1303);
-                cleanup();
             }
-        });
-
-        listener->enable();
-        auto req = web::WebRequest();
-        setupRequest(req, matjson::makeObject({}));
-        listener->setFilter(req.post(fmt::format("{}/endGame", getServerUrl())));
+        );
     };
 
     std::string warning = pendingGuess && options.versions.size() == 13 ? "\n(This round will <cr>count as a loss</c>!)" : "";
@@ -510,20 +481,22 @@ std::vector<LeaderboardEntry> GuessManager::jsonToEntries(std::vector<matjson::V
 }
 
 void GuessManager::getGuesses(int accountID, std::function<void(GuessesResponse)> callback, int page) {
-    auto listener = std::make_shared<geode::EventListener<web::WebTask>>();
-    listener->bind([this, callback, keep = listener] (web::WebTask::Event* e) {
-        auto cleanup = [&, keep]{
-            keep->disable();
-            safeRemoveLoadingLayer();
-        };
-        if (web::WebResponse* res = e->getValue()) {
-            if (res->code() != 200) {
-                showError(fmt::format("error getting guesses; http code: {}, error: {}", res->code(), res->string().unwrapOr("unable to get error string")), res->code());
+    auto req = web::WebRequest();
+    setupRequest(req, matjson::makeObject({}));
+    async::spawn(
+        req.get(fmt::format("{}/guesses/{}?page={}", getServerUrl(), accountID, page)),
+        [this, callback] (web::WebResponse res) {
+            auto cleanup = [&]{
+                safeRemoveLoadingLayer();
+            };
+
+            if (res.code() != 200) {
+                showError(fmt::format("error getting guesses; http code: {}, error: {}", res.code(), res.string().unwrapOr("unable to get error string")), res.code());
                 cleanup();
                 return;
             }
 
-            auto jsonRes = res->json();
+            auto jsonRes = res.json();
             if (jsonRes.isErr()) {
                 showError(fmt::format("error getting json: {}", jsonRes.unwrapErr()), 1004);
                 cleanup();
@@ -577,37 +550,30 @@ void GuessManager::getGuesses(int accountID, std::function<void(GuessesResponse)
                 .total_pages = static_cast<int>(json["total_pages"].asInt().unwrapOr(0))
             });
             cleanup();
-        } else if (e->isCancelled()) {
-            showError("request cancelled", 1303);
-            cleanup();
         }
-    });
-
-    listener->enable();
-    auto req = web::WebRequest();
-    setupRequest(req, matjson::makeObject({}));
-    listener->setFilter(req.get(fmt::format("{}/guesses/{}?page={}", getServerUrl(), accountID, page))); 
+    );
 }
 
 void GuessManager::getLeaderboard(std::function<void(std::vector<LeaderboardEntry>)> callback) {
     safeAddLoadingLayer();
     updateStatusAndLoading(TaskStatus::GetLeaderboard);
 
-    auto listener = std::make_shared<geode::EventListener<web::WebTask>>();
-    listener->bind([this, callback, keep = listener] (web::WebTask::Event* e) {
-        auto cleanup = [&, keep]{
-            keep->disable();
-            safeRemoveLoadingLayer();
-        };
-        
-        if (web::WebResponse* res = e->getValue()) {
-            if (res->code() != 200) {
-                showError(fmt::format("error getting leaderboards; http code: {}, error: {}", res->code(), res->string().unwrapOr("unable to get error string")), res->code());
+    auto req = web::WebRequest();
+    setupRequest(req, matjson::makeObject({}));
+    async::spawn(
+        req.get(fmt::format("{}/leaderboard", getServerUrl())),
+        [this, callback] (web::WebResponse res) {
+            auto cleanup = [&]{
+                safeRemoveLoadingLayer();
+            };
+            
+            if (res.code() != 200) {
+                showError(fmt::format("error getting leaderboards; http code: {}, error: {}", res.code(), res.string().unwrapOr("unable to get error string")), res.code());
                 cleanup();
                 return;
             }
 
-            auto jsonRes = res->json();
+            auto jsonRes = res.json();
             if (jsonRes.isErr()) {
                 showError(fmt::format("error getting json: {}", jsonRes.unwrapErr()), 1005);
                 cleanup();
@@ -625,39 +591,44 @@ void GuessManager::getLeaderboard(std::function<void(std::vector<LeaderboardEntr
             auto leaderboardJson = lbResult.unwrap();
             callback(jsonToEntries(leaderboardJson));
             cleanup();
-        } else if (e->isCancelled()) {
-            showError("request cancelled", 1303);
-            cleanup();
         }
-    });
-
-    listener->enable();
-    auto req = web::WebRequest();
-    setupRequest(req, matjson::makeObject({}));
-    listener->setFilter(req.get(fmt::format("{}/leaderboard", getServerUrl())));
+    );
 }
 
 void GuessManager::getAccount(std::function<void(LeaderboardEntry)> callback, int accountID, std::string username) {
     safeAddLoadingLayer();
     updateStatusAndLoading(TaskStatus::LoadingAccount);
 
+    auto req = web::WebRequest();
+    std::string endpoint = "";
+    if (accountID != 0) {
+        endpoint = "account";
+    } else if (!username.empty()) {
+        endpoint = "accountByName";
+    } else {
+        log::error("there must either be an accountID or username while getting an account.");
+        showError("no accountID or username provided while getting an account", 1107);
+        safeRemoveLoadingLayer();
+        return;
+    }
+    
+    setupRequest(req, matjson::makeObject({}));
+    // log::info("{}/{}/{}", getServerUrl(), endpoint, (accountID == 0) ? username : std::to_string(accountID));
+    async::spawn(
+        req.get(fmt::format("{}/{}/{}", getServerUrl(), endpoint, (accountID == 0) ? username : std::to_string(accountID))),
+        [this, callback] (web::WebResponse res) {
+            auto cleanup = [&]{
+                safeRemoveLoadingLayer();
+            };
 
-    auto listener = std::make_shared<geode::EventListener<web::WebTask>>();
-    listener->bind([this, callback, keep = listener] (web::WebTask::Event* e) {
-        auto cleanup = [&, keep]{
-            keep->disable();
             safeRemoveLoadingLayer();
-        };
-
-        if (web::WebResponse* res = e->getValue()) {
-            safeRemoveLoadingLayer();
-            if (res->code() != 200 && res->code() != 404) {
-                showError(fmt::format("error getting account; http code: {}, error: {}", res->code(), res->string().unwrapOr("unable to get error string")), res->code());
+            if (res.code() != 200 && res.code() != 404) {
+                showError(fmt::format("error getting account; http code: {}, error: {}", res.code(), res.string().unwrapOr("unable to get error string")), res.code());
                 cleanup();
                 return;
             }
 
-            if (res->code() == 404) {
+            if (res.code() == 404) {
                 LeaderboardEntry dummy {
                     0,
                     "Unknown",
@@ -677,7 +648,7 @@ void GuessManager::getAccount(std::function<void(LeaderboardEntry)> callback, in
                 return;
             }
 
-            auto jsonRes = res->json();
+            auto jsonRes = res.json();
             if (jsonRes.isErr()) {
                 showError(fmt::format("error getting json: {}", jsonRes.unwrapErr()), 1006);
                 cleanup();
@@ -686,28 +657,8 @@ void GuessManager::getAccount(std::function<void(LeaderboardEntry)> callback, in
 
             auto json = jsonRes.unwrap();
             callback(jsonToEntries({ json })[0]);
-        } else if (e->isCancelled()) {
-            showError("request cancelled", 1303);
         }
-    });
-
-    listener->enable();
-    auto req = web::WebRequest();
-    std::string endpoint = "";
-    if (accountID != 0) {
-        endpoint = "account";
-    } else if (!username.empty()) {
-        endpoint = "accountByName";
-    } else {
-        log::error("there must either be an accountID or username while getting an account.");
-        showError("no accountID or username provided while getting an account", 1107);
-        safeRemoveLoadingLayer();
-        return;
-    }
-    
-    setupRequest(req, matjson::makeObject({}));
-    // log::info("{}/{}/{}", getServerUrl(), endpoint, (accountID == 0) ? username : std::to_string(accountID));
-    listener->setFilter(req.get(fmt::format("{}/{}/{}", getServerUrl(), endpoint, (accountID == 0) ? username : std::to_string(accountID))));
+    );
 }
 
 void GuessManager::syncScores() {
@@ -731,7 +682,7 @@ void GuessManager::loadLevelsFinished(cocos2d::CCArray* p0, char const* p1, int 
 
     if (p0->count()) {
         glm->m_levelDownloadDelegate = this;
-        glm->downloadLevel(static_cast<GJGameLevel*>(p0->objectAtIndex(0))->m_levelID, false);
+        glm->downloadLevel(static_cast<GJGameLevel*>(p0->objectAtIndex(0))->m_levelID, false, 0);
     }
 }
 

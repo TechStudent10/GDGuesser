@@ -81,7 +81,7 @@ protected:
 
 DuelsResultsPopup* DuelsResultsPopup::create(DuelResults results) {
     auto ret = new DuelsResultsPopup;
-    if (ret->initAnchored(360.f, 235.f, results)) {
+    if (ret->init(results)) {
         ret->autorelease();
         return ret;
     }
@@ -89,7 +89,9 @@ DuelsResultsPopup* DuelsResultsPopup::create(DuelResults results) {
     return nullptr;
 }
 
-bool DuelsResultsPopup::setup(DuelResults results) {
+bool DuelsResultsPopup::init(DuelResults results) {
+    if (!Popup::init(360.f, 235.f)) return false;
+
     this->setTitle("Results");
 
     auto& gm = GuessManager::get();

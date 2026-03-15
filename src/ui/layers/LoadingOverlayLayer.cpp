@@ -78,11 +78,10 @@ void LoadingOverlayLayer::updateStatus(TaskStatus status) {
 }
 
 void LoadingOverlayLayer::addToScene() {
-    SceneManager::get()->keepAcrossScenes(this);
+    OverlayManager::get()->addChild(this);
 }
 
 void LoadingOverlayLayer::removeMe() {
-    SceneManager::get()->forget(this);
     this->removeFromParentAndCleanup(true);
     GuessManager::get().loadingOverlay = nullptr;
 }

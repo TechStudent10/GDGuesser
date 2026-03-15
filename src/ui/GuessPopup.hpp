@@ -6,9 +6,9 @@
 
 using namespace geode::prelude;
 
-class GuessPopup : public geode::Popup<>, TextInputDelegate {
+class GuessPopup : public geode::Popup, TextInputDelegate {
 protected:
-    bool setup() override;
+    bool popupInit();
     void onClose(CCObject* sender) override;
 
     bool closedViaGuess = false;

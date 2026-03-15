@@ -6,7 +6,7 @@
 
 StartPopup* StartPopup::create() {
     auto ret = new StartPopup;
-    if (ret->initAnchored(300.f, 250.f)) {
+    if (ret->init()) {
         ret->autorelease();
         return ret;
     }
@@ -14,7 +14,9 @@ StartPopup* StartPopup::create() {
     return nullptr;
 }
 
-bool StartPopup::setup() {
+bool StartPopup::init() {
+    if (!Popup::init(300.f, 250.f)) return false;
+
     this->setTitle("GDGuesser");
 
     auto playSprite = CCSprite::createWithSpriteFrameName("GJ_playBtn2_001.png");
@@ -54,7 +56,7 @@ bool StartPopup::setup() {
     auto topRightMenu = CCMenu::create();
     auto discordBtn = CCMenuItemExt::createSpriteExtraWithFrameName("gj_discordIcon_001.png", 1.f, [](CCObject*) {
         CCApplication::get()->openURL(
-            Mod::get()->getMetadataRef().getLinks().getCommunityURL()->c_str()
+            Mod::get()->getMetadata().getLinks().getCommunityURL()->c_str()
         );
     });
     auto infoBtn = InfoAlertButton::create("Info", "<cg>Normal mode</c> is the regular version of the game. You can see the level name, author, and difficulty. Scores submitted in this mode are out of 500.\n<cr>Hardcore mode</c> gives you nothing but the song name and level to go by. Scores submitted in this mode are out of 600.", .75f);
