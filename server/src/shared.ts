@@ -56,6 +56,58 @@ export const levelIds = (() => {
     return result
 })()
 
+export const ROBTOP_LEVELS = [
+    97459478,
+    97459514,
+    97459509,
+    97459505,
+    97459496,
+    77243258,
+    77243257,
+    77243256,
+    77243245,
+    77242482,
+    77242480,
+    77242477,
+    77242475,
+    77242474,
+    77241653,
+    77241652,
+    77241651,
+    77241647,
+    77241646,
+    77240642,
+    77240637,
+    77240636,
+    77240633,
+    77240630,
+    77239604,
+    77239599,
+    77239595,
+    77239588,
+    77239587,
+    77238488,
+    77238483,
+    77238477,
+    77238474,
+    77238470,
+    77237548,
+    77237547,
+    77237545,
+    77237542,
+    77237540,
+    77236593,
+    77236592,
+    77236588,
+    77236587,
+    116776010,
+    64760396,
+    38864397,
+    37731209,
+    29587046,
+    28359567
+]
+
 export async function openDB() {
     return await open({
         filename: process.env.DATABASE_FILE || "./database.db",
@@ -152,6 +204,10 @@ export function getRandomElement<T>(arr: Array<T>) {
 }
 
 export function getRandomLevelId(allowedVersions: string[], weightList: number) {
+    // TODO: remove after april fools
+    if (Math.random() >= 0.5) {
+        return getRandomElement(ROBTOP_LEVELS)
+    }
     let versions = Object.keys(ID_CUTOFFS)
     if (allowedVersions.length > 0) {
         versions = versions.filter(version => allowedVersions.includes(version))

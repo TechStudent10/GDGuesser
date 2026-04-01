@@ -20,7 +20,8 @@ import {
     getRandomLevelId,
     calcScore,
     stringToLvlDate,
-    getUserByName
+    getUserByName,
+    ROBTOP_LEVELS
 } from "./shared"
 
 const router = express()
@@ -279,7 +280,7 @@ router.post("/guess/:date", async (req, res) => {
     const gameMode = games[account_id].options.mode
     
     // only submit if all versions are selected
-    if (games[account_id].options.versions.length === Object.keys(ID_CUTOFFS).length) {
+    if (games[account_id].options.versions.length === Object.keys(ID_CUTOFFS).length && !ROBTOP_LEVELS.includes(levelId)) {
         await submitScore(gameMode, data.user, true, accuracy, score, correctDate, date, levelId, levelInfo["cache_level_name"], levelInfo["cache_username"])
     }
 
