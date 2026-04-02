@@ -204,10 +204,10 @@ export function getRandomElement<T>(arr: Array<T>) {
 }
 
 export function getRandomLevelId(allowedVersions: string[], weightList: number) {
-    // TODO: remove after april fools
-    if (Math.random() >= 0.5) {
-        return getRandomElement(ROBTOP_LEVELS)
-    }
+    // april fools 2026 lol
+    // if (Math.random() >= 0.5) {
+    //     return getRandomElement(ROBTOP_LEVELS)
+    // }
     let versions = Object.keys(ID_CUTOFFS)
     if (allowedVersions.length > 0) {
         versions = versions.filter(version => allowedVersions.includes(version))
