@@ -1,3 +1,8 @@
+# 1.0.0
+Decided there's no point to keeping this in beta :D
+- Fixed the year limit being incorrect
+- Reverted the April Fools update (50% chance to get a RobTop Level)
+
 # 1.0.0-beta.13
 - Fixed the log spam coming from the mod
 - Fixed the server crashing on exception

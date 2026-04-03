@@ -8,7 +8,7 @@
 	},
 	"id": "techstudent10.gdguesser",
 	"name": "GDGuesser",
-	"version": "v1.0.0-beta.14",
+	"version": "v1.0.0",
 	"developer": "TechStudent10",
 	"description": "Guess the date of Geometry Dash levels!",
 	"resources": {
