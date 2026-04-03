@@ -24,7 +24,7 @@ bool GuessPopup::popupInit() {
         gm.persistentNode->slideOff();
     }
     
-    m_yearInput = NumberInput::create("Year", 2025, 2013, InputType::Year);
+    m_yearInput = NumberInput::create("Year", 2026, 2013, InputType::Year);
     m_yearInput->setAnchorPoint({ 0.5f, 0.5f });
     m_yearInput->m_input->setDelegate(this);
     
@@ -71,7 +71,7 @@ bool GuessPopup::popupInit() {
         int month = m_monthInput->getValue();
         int day = m_dayInput->getValue();
 
-        if (year > 2025 || year < 2013) {
+        if (year > 2026 || year < 2013) {
             m_yearInput->m_titleLabel->setColor({ 255, 0, 0 });
             m_yearInput->m_titleLabel->runAction(CCTintTo::create(0.5f, 255, 255, 255));
             invalidDate = true;
