@@ -25,7 +25,9 @@ enum class TaskStatus {
     SubmitGuess,
     EndGame,
     LoadingAccount,
-    WaitingForOpponent
+    WaitingForOpponent,
+    CreatingLobby,
+    JoiningLobby
 };
 
 struct LevelDate {
