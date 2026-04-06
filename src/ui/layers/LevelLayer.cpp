@@ -11,7 +11,7 @@ LevelLayer* LevelLayer::create() {
         ret->autorelease();
         return ret;
     }
-    
+
     delete ret;
     return nullptr;
 }
@@ -89,26 +89,31 @@ bool LevelLayer::init() {
         gm.options.mode == GameMode::Normal ? gm.realLevel->m_levelName.c_str() : "?????????",
         "bigFont.fnt"
     );
+    nameLabel->setID("name-label");
 
     auto authorLabel = CCLabelBMFont::create(
         gm.options.mode == GameMode::Normal ? fmt::format("By {}", gm.realLevel->m_creatorName).c_str() : "By ??????",
         "goldFont.fnt"
     );
+    authorLabel->setID("author-label");
 
     // thanks once again Vinster!!
     auto difficultySprite = GJDifficultySprite::create(
         gm.options.mode == GameMode::Normal ? gm.getLevelDifficulty(gm.realLevel) : 0,
         GJDifficultyName::Long
     );
+    difficultySprite->setID("difficulty-sprite");
 
     auto starsLabel = CCLabelBMFont::create(
         gm.options.mode == GameMode::Normal ? fmt::format("{}", (gm.realLevel->m_stars).value()).c_str() : "??",
         "bigFont.fnt"
     );
+    starsLabel->setID("stars-label");
 
     auto starsIcon = CCSprite::createWithSpriteFrameName(
         gm.realLevel->m_levelLength == 5  ? "moon_small01_001.png" : "star_small01_001.png"
     );
+    starsIcon->setID("stars-icon");
 
     starsLabel->setPosition({ size.width * 0.5f - 100.f, director->getScreenTop() * 0.6f});
     difficultySprite->setPosition({ starsLabel->getPositionX(), starsLabel->getPositionY() + (gm.realLevel->m_demon > 0 && gm.options.mode == GameMode::Normal ? 40.f : 30.f)});
@@ -137,7 +142,7 @@ bool LevelLayer::init() {
     // This fixes the song being unknown? its weird but it works so who cares
     auto songObject = gm.realLevel->m_songID == 0 ? LevelTools::getSongObject(gm.realLevel->m_audioTrack) : SongInfoObject::create(gm.realLevel->m_songID);
     auto songWidget = CustomSongWidget::create(songObject, nullptr, false, false, true, gm.realLevel->m_songID == 0, false, false, 0);
-    
+
     songWidget->updateWithMultiAssets(gm.realLevel->m_songIDs, gm.realLevel->m_sfxIDs, 0);
 
     songWidget->updateSongInfo();
@@ -146,6 +151,7 @@ bool LevelLayer::init() {
     this->addChild(songWidget);
 
     auto buttonMenu = CCMenu::create();
+    buttonMenu->setID("button-menu");
     buttonMenu->addChild(m_playBtn);
     buttonMenu->addChild(m_guessBtn);
     buttonMenu->addChild(m_settingsBtn);
@@ -169,6 +175,7 @@ bool LevelLayer::init() {
     );
 
     auto closeMenu = CCMenu::create();
+    closeMenu->setID("close-menu");
     closeMenu->addChild(closeBtn);
     closeMenu->setPosition({ 24.f, director->getScreenTop() - 23.f });
     this->addChild(closeMenu);
@@ -226,7 +233,7 @@ void LevelLayer::loadLevelStep() {
         callfunc = callfunc_selector(LevelLayer::playStep4);
 
     auto sequence = CCSequence::create(CCDelayTime::create(0.f), CCCallFunc::create(this, callfunc), 0);
-    this->runAction(sequence);       
+    this->runAction(sequence);
 }
 
 void LevelLayer::playStep4() {
@@ -278,7 +285,7 @@ void LevelLayer::createLoadingSprite() {
     innerCircleDark->setZOrder(-2);
     innerCircleDark->setPosition(m_playSprite->getContentSize() * 0.5f);
     m_playSprite->addChild(innerCircleDark);
-    
+
     auto progressTimerSpr = CCSprite::createWithSpriteFrameName("d_circle_01_001.png");
     progressTimerSpr->setColor({ 0, 0xff, 0 });
     m_progressTimer = CCProgressTimer::create(progressTimerSpr);
